@@ -2,13 +2,15 @@ import { useEffect, useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import Ajv from 'ajv';
 import { parse } from 'json-source-map';
+import ButtonComponent from '../ButtonComponent/ButtonComponent.component';
+import type { JsonEditorProps } from '../../types/JsonEditorProps';
 
-interface JsonEditorProps {
-  onChange?: (jsonData: any) => void;
-  initialValue?: string;
-  height?: string;
-  theme?: 'light' | 'dark';
-}
+// interface JsonEditorProps {
+//   onChange?: (jsonData: any) => void;
+//   initialValue?: string;
+//   height?: string;
+//   theme?: 'light' | 'dark';
+// }
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 
@@ -76,6 +78,18 @@ export default function EditorWindow({
     });
   };
 
+  const changeEffectOnOutputWindow = (value:string) => {
+    // Call parent onChange callback
+    if (onChange) {
+      try {
+        const parsed = JSON.parse(value);
+        onChange(parsed);
+      } catch {
+        onChange(null);
+      }
+    }
+  }
+
   const validateJSON = (text: string) => {
     if (!monacoRef.current || !modelRef.current) return;
 
@@ -135,30 +149,38 @@ export default function EditorWindow({
     monacoRef.current.editor.setModelMarkers(modelRef.current, 'validation', markers);
   };
 
-  // useEffect(()=>{
-  //   setJsonText(localStorage.getItem("JsonText"));
-  // },[])
+  useEffect(()=>{
+    try{
+      if(localStorage.getItem("JsonText")){
+        const storedJson = localStorage.getItem("JsonText") || '';
+        // console.log("local storage get json executed useEffect in Editor Window",storedJson);
+        setJsonText(JSON.parse(JSON.stringify(storedJson)));
+      }
+    }catch(err){
+      console.error("Error parsing JSON from localStorage:", err);
+    }
+  },[]);
 
   useEffect(() => {
+    // console.log("Editor Ready:", editorReady);
+    // console.log("Current JSON Text:", jsonText);
     if (editorReady && jsonText) {
+      localStorage.setItem("JsonText",jsonText);
       validateJSON(jsonText);
+      if(isValidJson){
+        changeEffectOnOutputWindow(jsonText);
+      }
     }
   }, [jsonText, editorReady]);
+
+  
 
   const handleChange = (value: string | undefined) => {
     const newValue = value || '';
     setJsonText(newValue);
-    // localStorage.setItem("JsonText",newValue);
-
-    // Call parent onChange callback
-    if (onChange) {
-      try {
-        const parsed = JSON.parse(newValue);
-        onChange(parsed);
-      } catch {
-        onChange(null);
-      }
-    }
+    localStorage.setItem("JsonText",newValue);
+    changeEffectOnOutputWindow(newValue);
+    
   };
 
   const handleFormatJson = () => {
@@ -263,6 +285,16 @@ export default function EditorWindow({
       ]
     },
     {
+      "id":"gender",
+      "type":"radio",
+      "label":"gender",
+      "required":true,
+      "options":[
+        {"value":"male","label":"Male"},
+        {"value":"female","label":"Female"}
+      ]
+    },
+    {
       "id": "standardUserBenefit",
       "type": "checkbox",
       "label": "I want to receive newsletters",
@@ -272,6 +304,11 @@ export default function EditorWindow({
     }
   ]
 }`;
+
+const handleLoadTemplate = () => {
+    setJsonText(defaultTemplate);
+    changeEffectOnOutputWindow(defaultTemplate);
+}
 
   return (
     <div className="w-full flex flex-col gap-4">
@@ -284,18 +321,30 @@ export default function EditorWindow({
           </p>
         </div>
         <div className="flex gap-2">
-          <button
+          {/* <button
             onClick={handleFormatJson}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
           >
             Format JSON
-          </button>
-          <button
+          </button> */}
+          <ButtonComponent buttonfield={{
+            type:"button",
+            onClick:handleFormatJson,
+            buttonClasses:"px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition",
+            text:"Format JSON"
+          }} />
+          {/* <button
             onClick={() => setJsonText(defaultTemplate)}
             className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
           >
             Load Template
-          </button>
+          </button> */}
+          <ButtonComponent buttonfield={{
+            type:"button",
+            onClick:handleLoadTemplate, 
+            buttonClasses:"px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition",
+            text:"Load Template"
+          }} />
         </div>
       </div>
 

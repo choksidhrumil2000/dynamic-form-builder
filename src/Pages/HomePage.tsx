@@ -21,17 +21,26 @@
 //     )
 // }
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import type { FormStructure } from '../types/FormStructure';
 // import JsonEditor from '@/components/JsonEditor';
 // import DynamicFormGenerator from '@/components/DynamicFormGenerator';
 import EditorWindow from '../Components/EditorComponent/EditorWindow.component';
 import OutputWindow from '../Components/OutputWindow/OutputWindow.Component';
 
 export default function HomePage() {
-  const [formStructure, setFormStructure] = useState<any>(null);
+    // const [formStructure, setFormStructure] = useState<any>(null);
+  const [formStructure, setFormStructure] = useState<FormStructure | null>(null);
+
+
+//   useEffect(()=>{
+//     return () => {      
+//         localStorage.clear();
+//     }
+//   },[]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br m-0 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-2">
           🎨 Dynamic Form Builder
@@ -66,7 +75,10 @@ export default function HomePage() {
           {/* Form Preview */}
           <div className="flex flex-col">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Form Preview</h2>
-            <OutputWindow formStructure={formStructure} />
+            <OutputWindow
+            //   key={formStructure ? JSON.stringify(formStructure) : 'empty-form'}
+              formStructure={formStructure}
+            />
           </div>
         </div>
       </div>
