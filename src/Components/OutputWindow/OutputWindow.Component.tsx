@@ -9,7 +9,7 @@ import ButtonComponent from '../ButtonComponent/ButtonComponent.component';
 import type { FormField } from '../../types/FormField';
 import type { FormStructure } from '../../types/FormStructure';
 import type { DynamicFormGeneratorProps } from '../../types/DynamicFormGeneratorProps';
-import { RefreshCw } from 'lucide-react';
+import { CircleMinus, CirclePlus, RefreshCw } from 'lucide-react';
 
 // interface FormField {
 //   id: string;
@@ -34,7 +34,7 @@ import { RefreshCw } from 'lucide-react';
 //   formStructure: FormStructure | null;
 // }
 
-export default function OutputWindow({ formStructure }: DynamicFormGeneratorProps) {
+export default function OutputWindow({ formStructure,onChange,jsonText,setJsonText }: DynamicFormGeneratorProps) {
   const initialValue = {};
   const [formData, setFormData] = useState<Record<string, any>>(initialValue);
   const [submitted, setSubmitted] = useState(false);
@@ -360,6 +360,33 @@ useEffect(() => {
     setSubmitted(false);
   };
 
+  const handleAddField = () => {};
+
+  const handleRemoveField = (field:FormField) => {
+    // formStructure.fields = formStructure.fields.filter(f => f.id !== field.id);
+    onChange((prev)=>{
+        if(!prev) return prev;
+        const updatedStructure = { ...prev };
+        updatedStructure.fields = updatedStructure.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+        return updatedStructure;
+    }); 
+    setJsonText((prev)=>{
+        try{
+            const parsed = JSON.parse(prev);
+            parsed.fields = parsed.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+            return JSON.stringify(parsed, null, 2);
+        } catch {
+            return prev;
+        }
+    });
+
+    setFormData((prev) => {
+      const updatedData = { ...prev };
+      delete updatedData[field.id];
+      return updatedData;
+    });
+  };
+
 //   return (
 //     <div className="w-full bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
 //       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -454,6 +481,16 @@ return (
             ) : (
               renderField(field)
             )}
+            <ButtonComponent buttonfield={{
+                type:"button",
+                buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                text:<CirclePlus />,
+                onClick:handleAddField}}/> 
+          <ButtonComponent buttonfield={{
+                type:"button",
+                buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                text:<CircleMinus />,
+                onClick:()=>handleRemoveField(field)}}/> 
           </div>
         ))}
 
@@ -466,8 +503,9 @@ return (
         <ButtonComponent buttonfield={{
             type:"submit",
             buttonClasses:"w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-lg transition duration-200",
-            text:"Submit Form"
-        }} />
+            text:"Submit Form",
+            disabled:(!!formStructure && formStructure.fields.length === 0),
+            }}/>
       </form>
 
       {submitted && (

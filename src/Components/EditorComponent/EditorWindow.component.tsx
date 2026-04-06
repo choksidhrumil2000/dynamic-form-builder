@@ -56,8 +56,10 @@ export default function EditorWindow({
   initialValue = '',
   height = '500px',
   theme = 'dark',
+  jsonText,
+  setJsonText
 }: JsonEditorProps) {
-  const [jsonText, setJsonText] = useState(initialValue);
+  // const [jsonText, setJsonText] = useState(initialValue);
   const [editorReady, setEditorReady] = useState(false);
   const [errors, setErrors] = useState<any[]>([]);
   const [isValidJson, setIsValidJson] = useState(true);

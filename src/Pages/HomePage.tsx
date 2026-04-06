@@ -27,11 +27,24 @@ import type { FormStructure } from '../types/FormStructure';
 // import DynamicFormGenerator from '@/components/DynamicFormGenerator';
 import EditorWindow from '../Components/EditorComponent/EditorWindow.component';
 import OutputWindow from '../Components/OutputWindow/OutputWindow.Component';
+import { Form } from 'lucide-react';
 
 export default function HomePage() {
     // const [formStructure, setFormStructure] = useState<any>(null);
   const [formStructure, setFormStructure] = useState<FormStructure | null>(null);
-
+  const [jsonText, setJsonText] = useState(`{
+  "formTitle": "User Registration",
+  "formDescription": "Please fill in your details",
+  "fields": [
+    {
+      "id": "name",
+      "type": "text",
+      "label": "Full Name",
+      "placeholder": "Enter your full name",
+      "required": true
+    }
+  ]
+}`);
 
 //   useEffect(()=>{
 //     return () => {      
@@ -43,7 +56,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br m-0 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold text-center text-gray-900 dark:text-white mb-2">
-          🎨 Dynamic Form Builder
+          <Form className='inline w-10 h-10' />🎨 Dynamic Form Builder
         </h1>
         <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
           Create forms from JSON. Edit the JSON on the left, preview the form on the right.
@@ -56,19 +69,22 @@ export default function HomePage() {
               onChange={setFormStructure}
               height="600px"
               theme="dark"
-              initialValue={`{
-  "formTitle": "User Registration",
-  "formDescription": "Please fill in your details",
-  "fields": [
-    {
-      "id": "name",
-      "type": "text",
-      "label": "Full Name",
-      "placeholder": "Enter your full name",
-      "required": true
-    }
-  ]
-}`}
+//               initialValue={`{
+//   "formTitle": "User Registration",
+//   "formDescription": "Please fill in your details",
+//   "fields": [
+//     {
+//       "id": "name",
+//       "type": "text",
+//       "label": "Full Name",
+//       "placeholder": "Enter your full name",
+//       "required": true
+//     }
+//   ]
+// }`}
+initialValue={jsonText}
+jsonText={jsonText}
+setJsonText={setJsonText}
             />
           </div>
 
@@ -78,6 +94,9 @@ export default function HomePage() {
             <OutputWindow
             //   key={formStructure ? JSON.stringify(formStructure) : 'empty-form'}
               formStructure={formStructure}
+              onChange={setFormStructure}
+              jsonText={jsonText}
+              setJsonText={setJsonText}
             />
           </div>
         </div>

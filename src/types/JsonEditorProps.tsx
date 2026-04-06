@@ -3,4 +3,6 @@ export interface JsonEditorProps {
   initialValue?: string;
   height?: string;
   theme?: 'light' | 'dark';
+  jsonText:string;
+  setJsonText:(text:string)=>void;
 }
