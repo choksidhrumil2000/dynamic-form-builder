@@ -28,6 +28,7 @@ import type { FormStructure } from '../types/FormStructure';
 import EditorWindow from '../Components/EditorComponent/EditorWindow.component';
 import OutputWindow from '../Components/OutputWindow/OutputWindow.Component';
 import { Form } from 'lucide-react';
+import Modal from '../Components/Modal Component/Modal.Component';
 
 export default function HomePage() {
     // const [formStructure, setFormStructure] = useState<any>(null);
@@ -45,6 +46,130 @@ export default function HomePage() {
     }
   ]
 }`);
+
+  const [open, setOpen] = useState(false)
+
+  const ModalFormJson = `{
+  "formTitle": "Add Field to Form",
+  "formDescription": "Fill the details required to generate Field",
+  "fields": [
+    {
+      "id": "id",
+      "type": "text",
+      "label": "Id",
+      "placeholder": "Enter Id Of Field",
+      "required": true
+    },
+    {
+      "id": "label",
+      "type": "text",
+      "label": "label",
+      "placeholder": "Enter label ",
+      "required": true
+    },
+    {
+      "id": "type",
+      "type": "select",
+      "label": "Field Type",
+      "required": true,
+      "options": [
+        { "value": "text", "label": "Text" },
+        { "value": "email", "label": "Email" },
+        { "value": "number", "label": "Number" },
+        { "value": "date", "label": "Date" },
+        { "value": "select", "label": "Select" },
+        { "value": "textarea", "label": "TextArea" },
+        { "value": "radio", "label": "Radio Button" },
+        { "value": "checkbox", "label": "CheckBox" }
+      ]
+    },
+    {
+      "id": "dependsOn",
+      "type": "select",
+      "label": "DependsOn",
+      "placeholder": "Enter DependOnValue",
+      "required": false
+    },
+    {
+      "id": "dependsOnValue",
+      "type": "select",
+      "label": "DependsOnValue",
+      "placeholder": "Enter DependOnValue",
+      "required": false
+    },
+    {
+      "id": "showWhen",
+      "type": "select",
+      "label": "ShowWhen",
+      "placeholder": "Enter ShowWhen value",
+      "required": false,
+      "options": [
+        { "value": "equals", "label": "Equals" },
+        { "value": "includes", "label": "Includes" },
+        { "value": "notEquals", "label": "Not Equals" }
+      ]
+    },
+    {
+      "id": "placeholder",
+      "type": "text",
+      "label": "Placeholder",
+      "placeholder": "Enter Placeholder of Field",
+      "dependsOn": "type",
+      "dependsOnValue": ["text","email","number","date","textarea"],
+      "showWhen": "includes"
+    },
+    {
+      "id": "required",
+      "type": "select",
+      "label": "Required",
+      "dependsOn": "type",
+      "dependsOnValue": ["text","email","number","date","textarea","select","radio","checkbox"],
+      "showWhen": "includes",
+      "options": [
+        { "value": "true", "label": "True" },
+        { "value": "false", "label": "False" }
+      ]
+    },
+    {
+      "id": "options",
+      "type": "group",
+      "label": "Options",
+      "fields":[
+      {
+      "id": "options-value",
+      "type": "text",
+      "label": "option-value",
+      "placeholder": "Enter value of option"
+    },
+    {
+      "id": "options-label",
+      "type": "text",
+      "label": "option-label",
+      "placeholder": "Enter label of option"
+    }
+      ],
+      "dependsOn": "type",
+      "dependsOnValue": ["select","radio"],
+      "showWhen": "includes"
+    },
+    {
+      "id": "add-options",
+      "type": "button",
+      "label": "Add-Options",
+      "dependsOn": "type",
+      "dependsOnValue": ["select","radio"],
+      "showWhen": "includes"
+    }
+  ]
+}`;
+
+// try{
+
+  const [modalFormStructure,setModalFormStructure] = useState<FormStructure | null>(JSON.parse(ModalFormJson));  
+// }catch(err){
+//   console.log(err);
+// }
+
 
 //   useEffect(()=>{
 //     return () => {      
@@ -97,10 +222,25 @@ setJsonText={setJsonText}
               onChange={setFormStructure}
               jsonText={jsonText}
               setJsonText={setJsonText}
+              open={open}
+              setOpen={setOpen}
             />
           </div>
         </div>
       </div>
+      <Modal open={open} setOpen={setOpen}>
+        <div>
+          <OutputWindow 
+          formStructure={modalFormStructure}
+              onChange={setModalFormStructure}
+              jsonText={jsonText}
+              setJsonText={setJsonText}
+              open={open}
+              setOpen={setOpen}
+          />
+          
+        </div>
+      </Modal>
     </div>
   );
 }

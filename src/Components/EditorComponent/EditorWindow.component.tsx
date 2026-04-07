@@ -30,6 +30,28 @@ const formSchema = {
           label: { type: 'string' },
           placeholder: { type: 'string' },
           required: { type: 'boolean' },
+          fields: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          type: { type: 'string', enum: ['text', 'email', 'number', 'select', 'checkbox', 'radio', 'textarea', 'date'] },
+          label: { type: 'string' },
+          placeholder: { type: 'string' },
+          required: { type: 'boolean' },
+          validation: { type: 'object' },
+          options: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                value: { type: 'string' },
+                label: { type: 'string' },
+              },
+            },
+          },
+        },},},
           validation: { type: 'object' },
           options: {
             type: 'array',
@@ -149,6 +171,7 @@ export default function EditorWindow({
 
     // Set markers in editor
     monacoRef.current.editor.setModelMarkers(modelRef.current, 'validation', markers);
+  // console.log(errors);
   };
 
   useEffect(()=>{
@@ -173,6 +196,7 @@ export default function EditorWindow({
         changeEffectOnOutputWindow(jsonText);
       }
     }
+    // console.log("JSon Text",jsonText);
   }, [jsonText, editorReady]);
 
   

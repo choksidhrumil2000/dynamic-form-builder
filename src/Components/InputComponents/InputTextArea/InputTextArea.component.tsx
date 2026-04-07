@@ -7,7 +7,7 @@ export default function InputTextArea(field:propsInputFields) {
             placeholder={field.placeholder}
             required={field.required}
             value={field.value}
-            onChange={(e) => field.onChange(field.id, e.target.value)}
+            onChange={field.onChange}
             rows={4}
             className={field.baseInputClasses}
           />

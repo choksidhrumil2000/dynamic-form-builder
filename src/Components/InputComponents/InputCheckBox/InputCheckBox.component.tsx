@@ -7,7 +7,7 @@ export default function InputCheckBox(field:propsInputCheckBox) {
             id={field.id}
             required={field.required}
             checked={field.checked}
-            onChange={(e) => field.onChange(field.id, e.target.checked)}
+            onChange={field.onChange}
             className={field.baseInputClasses}
           />
     );

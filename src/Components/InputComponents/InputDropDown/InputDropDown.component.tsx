@@ -6,7 +6,7 @@ export default function InputDropDown(field:propsInputDorpDown) {
             id={field.id}
             required={field.required}
             value={field.value}
-            onChange={(e) => field.onChange(field.id, e.target.value)}
+            onChange={field.onChange}
             className={field.baseInputClasses}
           >
             <option value="">Select an option</option>

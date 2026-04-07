@@ -11,7 +11,7 @@ export default function InputRadio(field:propsInputRadio){
                   value={option.value}
                   required={field.required}
                   checked={field.checked === option.value}
-                  onChange={(e) => field.onChange(field.id, e.target.value)}
+                  onChange={field.onChange}
                   className="w-4 h-4"
                 />
                 <span className="text-gray-700 dark:text-gray-300">{option.label}</span>

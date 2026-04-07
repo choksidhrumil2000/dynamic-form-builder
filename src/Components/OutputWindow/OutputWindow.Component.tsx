@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import InputTextField from '../InputComponents/InputTextField/InputTextField.Component';
 import type { propsInputFields } from '../../types/propsInputFields';
 import InputTextArea from '../InputComponents/InputTextArea/InputTextArea.component';
@@ -10,6 +10,10 @@ import type { FormField } from '../../types/FormField';
 import type { FormStructure } from '../../types/FormStructure';
 import type { DynamicFormGeneratorProps } from '../../types/DynamicFormGeneratorProps';
 import { CircleMinus, CirclePlus, RefreshCw } from 'lucide-react';
+import type { propsButton } from '../../types/PropsButton';
+import type { propsInputDorpDown } from '../../types/propsInputDorpDown';
+import type { propsInputCheckBox } from '../../types/propsInputCheckBox';
+import type { propsInputRadio } from '../../types/propsInputRadio';
 
 // interface FormField {
 //   id: string;
@@ -34,12 +38,14 @@ import { CircleMinus, CirclePlus, RefreshCw } from 'lucide-react';
 //   formStructure: FormStructure | null;
 // }
 
-export default function OutputWindow({ formStructure,onChange,jsonText,setJsonText }: DynamicFormGeneratorProps) {
+export default function OutputWindow({ formStructure,onChange,jsonText,setJsonText,open,setOpen }: DynamicFormGeneratorProps) {
   const initialValue = {};
   const [formData, setFormData] = useState<Record<string, any>>(initialValue);
   const [submitted, setSubmitted] = useState(false);
 
   const [isInitialMount, setIsInitialMount] = useState(true);
+
+  const [modalFormData,setModalFormData] = useState<Record<string, any>>(initialValue);
 
 //   const STORAGE_KEY = 'FormData';
 
@@ -94,9 +100,15 @@ export default function OutputWindow({ formStructure,onChange,jsonText,setJsonTe
 //   },[])
 
   useEffect(() => {
+    console.log("After Form Structure Change", formStructure);
     if (!formStructure?.fields) {
-      setFormData({});
-      setSubmitted(false);
+      if(!open){
+
+        setFormData({});
+        setSubmitted(false);
+      }else{
+        // setModalFormData({});
+      }
       return;
     }
 
@@ -106,8 +118,9 @@ export default function OutputWindow({ formStructure,onChange,jsonText,setJsonTe
     return;
   }
 
-    const initialData: Record<string, any> = {};
-    
+  const initialData: Record<string, any> = {};
+  
+  if(!open){
     formStructure.fields.forEach((field) => {
       if (field.type === 'checkbox') {
         initialData[field.id] = false;
@@ -121,7 +134,54 @@ export default function OutputWindow({ formStructure,onChange,jsonText,setJsonTe
     setFormData(initialData);
     setSubmitted(false);
     localStorage.removeItem("FormData");
+
+  }else{
+
+// formStructure.fields.forEach((field) => {
+//       if (field.type === 'checkbox') {
+//         initialData[field.id] = false;
+//       } else if (field.type === 'radio' || field.type === 'select') {
+//         initialData[field.id] = '';
+//       } 
+//       // else if(field.type === 'group'){ 
+//       //   initialData[field.id] = {};
+//       // }
+//       else{
+//         initialData[field.id] = '';
+//       }
+//     });
+//     setModalFormData(initialData);
+  }
   }, [formStructure]);
+
+  // Handle form structure changes when in editor mode
+useEffect(() => {
+  if (!open || !formStructure?.fields) return;
+
+  // Don't reset if it's the initial mount
+  if (isInitialMount) return;
+
+  // Only add new fields that don't exist in modalFormData
+  const newData = { ...modalFormData };
+  let hasChanges = false;
+
+  formStructure.fields.forEach((field) => {
+    if (newData[field.id] === undefined) {
+      hasChanges = true;
+      if (field.type === 'checkbox') {
+        newData[field.id] = false;
+      } else if (field.type === 'radio' || field.type === 'select') {
+        newData[field.id] = '';
+      } else {
+        newData[field.id] = '';
+      }
+    }
+  });
+
+  if (hasChanges) {
+    setModalFormData(newData);
+  }
+}, [formStructure, open, isInitialMount]);
 
 // useEffect(()=>{
 //     try{
@@ -151,6 +211,30 @@ useEffect(() => {
   } catch (err) {
     console.error("Error parsing JSON from localStorage:", err);
   }
+  console.log(jsonText);
+
+  if(open){
+    const JsonTextData = JSON.parse(jsonText);
+    let selectFields = [];
+    let optionsFields = [];
+    JsonTextData.fields.forEach((field:FormField)=>{
+      if(field.type === 'select'){
+        selectFields.push(field);
+        optionsFields.push(...field.options);
+      }
+    });
+
+    const tempStructure = JSON.parse(JSON.stringify(formStructure));
+    tempStructure.fields.forEach((f)=>{
+      if(f.id === 'dependsOn'){
+        const options = selectFields.map((f)=> ({value:f.id,label:f.label}));
+         f.options = [...options];
+      }else if(f.id === 'dependsOnValue'){
+          f.options = [...optionsFields];
+      }
+    })
+    onChange(tempStructure);
+  }
 }, []); 
 
 // useEffect(() =>{
@@ -179,7 +263,15 @@ useEffect(() => {
       return true;
     }
 
-    const dependentValue = formData[field.dependsOn];
+    console.log("here in Should SAhow Field")
+    let dependentValue;
+    if(!open){
+
+      dependentValue = formData[field.dependsOn];
+    }
+    else{
+      dependentValue = modalFormData[field.dependsOn];
+    }
     // console.log(dependentValue, field.dependsOn, formData, "Dependent Value and Form Data in shouldShowField");
     const showWhenType = field.showWhen || 'equals';
 
@@ -204,43 +296,145 @@ useEffect(() => {
     }
   };
 
-  const handleInputChange = (fieldId: string, value: any) => {
+  // const handleInputChange = (fieldId: string, value: any,parentId?: string | undefined | null) => {
+  //   if(!open){
+
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [fieldId]: value,
+  //     }));
+  //   }else{
+  //     console.log(fieldId,value,modalFormData,parentId);
+  //     setModalFormData((prev)=>{
+  //       if(!fieldId.startsWith("options")){
+  //         console.log(prev);
+  //         return {
+  //       ...prev,
+  //       [fieldId] : value,
+  //     }
+  //       }
+  //       else{
+  //         const tempObj = JSON.parse(JSON.stringify(prev));
+  //           if(parentId){
+  //             tempObj[parentId] = {
+  //               ...tempObj[parentId],
+  //               [fieldId]: value
+  //             };
+
+  //           }
+  //         return tempObj;
+  //     }
+  //   });
+  //   }
+  // };
+
+  const handleInputChange = (fieldId: string, value: any, parentId?: string | undefined | null) => {
+  if (!open) {
     setFormData((prev) => ({
       ...prev,
       [fieldId]: value,
     }));
-  };
+  } else {
+    setModalFormData((prev) => {
+      const tempObj = JSON.parse(JSON.stringify(prev));
+      
+      if (parentId) {
+        // Initialize parent object if it doesn't exist
+        if (!tempObj[parentId]) {
+          tempObj[parentId] = {};
+        }
+        // Store nested field value
+        tempObj[parentId][fieldId] = value;
+      } else {
+        // Store top-level field value
+        tempObj[fieldId] = value;
+      }
+      
+      console.log("Updated modalFormData:", tempObj);
+      return tempObj;
+    });
+  }
+};
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
-    console.log('Form Data:', formData);
-    localStorage.setItem("FormData",JSON.stringify(formData));
-    alert('Form submitted! Check console for data.');
+    if(!open){
+
+      setSubmitted(true);
+      console.log('Form Data:', formData);
+      localStorage.setItem("FormData",JSON.stringify(formData));
+      alert('Form submitted! Check console for data.');
+    }else{
+      console.log('Modal Form Data:', modalFormData);
+      console.log('Json text',jsonText );
+      console.log(formStructure);
+      const tempData = convertmodalDataToJSON(modalFormData);
+      const tempJSONTextData = JSON.parse(jsonText);
+      tempJSONTextData.fields.push(tempData);
+      setJsonText(JSON.stringify(tempJSONTextData, null, 2));
+      setOpen(false);
+    }
     // console.log(submitted);
   };
 
-  const renderField = (field: FormField) => {
+  const convertmodalDataToJSON = (data:any)=>{
+    return {
+      id: data.id || `field-${Date.now()}`,
+      type: data.type || 'text',
+      label: data.label || 'New Field',
+      placeholder: data.placeholder || '',
+      required: Boolean(data.required) || false,
+      options: data.options || undefined,
+      validation: data.validation || undefined,
+      dependsOn: data.dependsOn || undefined,
+      dependsOnValue: data.dependsOnValue || undefined,
+      showWhen: data.showWhen || undefined,
+      fields: data.fields || undefined,
+    };
+  }
+
+  const renderField = (field: FormField,parentId?:string|undefined|null) => {
     // setSubmitted(false);
     // console.log("Form Data",formData);
     // setFormData(initialValue);
     const baseInputClasses =
       'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white';
 
+
     switch (field.type) {
       case 'text':
       case 'email':
       case 'number':
       case 'date':{
-        const tempObj:propsInputFields = {
+              let tempObj:propsInputFields;
+
+        if(!open){
+          tempObj = {
             type:field.type,
             id:field.id,
             placeholder:field.placeholder || '',
             required:field.required || false,
             value:formData[field.id] || '',
-            onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.value, parentId),
             baseInputClasses,
         }
+      }
+        else{
+          tempObj = {
+            type:field.type,
+            id:field.id,
+            placeholder:field.placeholder || '',
+            required:field.required || false,
+            value:parentId
+      ? modalFormData[parentId]?.[field.id] || ''
+      : modalFormData[field.id] || '',
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.value, parentId),
+            baseInputClasses,
+        }
+        }
+        
+        
         return (
         //   <input
         //     type={field.type}
@@ -255,14 +449,29 @@ useEffect(() => {
         );
     }
       case 'textarea':{
-        const tempObj:propsInputFields = {
+        let tempObj:propsInputFields;
+        if(!open){tempObj = {
             type:field.type,
             id:field.id,
             placeholder:field.placeholder || '',
             required:field.required || false,
             value:formData[field.id] || '',
-            onChange:handleInputChange,
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLTextAreaElement>)=>handleInputChange(field.id, e.target.value, parentId),
             baseInputClasses,
+        }}else{
+         tempObj = {
+            type:field.type,
+            id:field.id,
+            placeholder:field.placeholder || '',
+            required:field.required || false,
+            value:parentId
+      ? modalFormData[parentId]?.[field.id] || ''
+      : modalFormData[field.id] || '',
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLTextAreaElement>)=>handleInputChange(field.id, e.target.value, parentId),
+            baseInputClasses,
+        } 
         }
         return (
         //   
@@ -270,15 +479,31 @@ useEffect(() => {
         );
 
     }case 'select':{
-        const tempObj={
+      let tempObj:propsInputDorpDown;
+      if(!open){
+        tempObj={
             type:field.type,
             id:field.id,
             required:field.required || false,
             value:formData[field.id] || '',
-            onChange:handleInputChange,
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLSelectElement>)=>handleInputChange(field.id, e.target.value, parentId),
             baseInputClasses,
             options:field.options || [],
         }
+      }else{
+        tempObj={
+            type:field.type,
+            id:field.id,
+            required:field.required || false,
+            value:modalFormData[field.id] || '',
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLSelectElement>)=>handleInputChange(field.id, e.target.value, parentId),
+            baseInputClasses,
+            options:field.options || [],
+        }
+      }
+        
         return (
         //   <select
         //     id={field.id}
@@ -298,14 +523,28 @@ useEffect(() => {
         );
     }
       case 'checkbox':{
-        const tempObj = {
+let tempObj:propsInputCheckBox;
+        if(!open){
+          tempObj = {
             type:field.type,
             id:field.id,
             required:field.required || false,
             checked:formData[field.id] || false,
-            onChange:handleInputChange,
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.checked, parentId),
             baseInputClasses:"w-5 h-5 cursor-pointer",  
         }
+        }else{
+          tempObj = {
+            type:field.type,
+            id:field.id,
+            required:field.required || false,
+            checked:modalFormData[field.id] || false,
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.checked, parentId),
+            baseInputClasses:"w-5 h-5 cursor-pointer",  
+        }
+        } 
         return(
         //   <input
         //     type="checkbox"
@@ -320,16 +559,30 @@ useEffect(() => {
       } 
 
       case 'radio':{
-
-        const tempObj ={
+let tempObj:propsInputRadio;
+        if(!open){
+tempObj ={
             type:field.type,
             id:field.id,
             required:field.required || false,
             checked:formData[field.id],
-            onChange:handleInputChange,
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.value, parentId),
             baseInputClasses:"w-4 h-4",
             options:field.options || [],
         }
+        }else{
+          tempObj ={
+            type:field.type,
+            id:field.id,
+            required:field.required || false,
+            checked:modalFormData[field.id],
+            // onChange:handleInputChange,
+            onChange:(e:React.ChangeEvent<HTMLInputElement>)=>handleInputChange(field.id, e.target.value, parentId),
+            baseInputClasses:"w-4 h-4",
+            options:field.options || [],
+        }
+        } 
         return (
         //   <div className="space-y-2">
         //     {field.options?.map((option) => (
@@ -349,31 +602,166 @@ useEffect(() => {
         <InputRadio {...tempObj} />
         );
     }
+    case 'button':{
+      if(open){
+        const  tempObj2:propsButton = {
+        type:field.type,
+        text:field.label,
+        buttonClasses:"px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition",
+        onClick:handleAddOptionsForSelectOrRadio
+      }
+      return <ButtonComponent buttonfield={{...tempObj2}} />
+      }break;
+      
+    }
+    case'group':break;
       default:
         return <input type="text" className={baseInputClasses} disabled />;
     }
   };
 
+  const handleAddOptionsForSelectOrRadio = ()=>{
+    console.log("Before",formStructure);
+
+    // onChange((prev)=>{
+    //   const temp = {...prev}
+    //   temp.fields = temp.fields.filter((f:FormField) => f.id !== "add-options");
+    //   temp.fields.push({
+    //   "id": `options-value-${temp.fields.length + 1}`,
+    //   "type": "text",
+    //   "label": "Options-value",
+    //   "dependsOn": "type",
+    //   "dependsOnValue": ["select","radio"],
+    //   "showWhen": "includes"
+    // },
+    // {
+    //   "id": `options-label-${temp.fields.length + 1}`,
+    //   "type": "text",
+    //   "label": "Options-label",
+    //   "dependsOn": "type",
+    //   "dependsOnValue": ["select","radio"],
+    //   "showWhen": "includes"
+    // },
+    // {
+    //   "id": "add-options",
+    //   "type": "button",
+    //   "label": "Add-Options",
+    //   "dependsOn": "type",
+    //   "dependsOnValue": ["select","radio"],
+    //   "showWhen": "includes"
+    // }
+    // )
+    // return temp;
+    // })
+
+    onChange((prev)=>{
+      if(!prev) return prev;
+      const temp = {...prev}
+      const buttonObj = temp.fields.find((f:FormField) => f.id === "add-options");
+      temp.fields = temp.fields.filter((f:FormField) => f.id !== "add-options");
+      // let idx = temp.fields.findIndex((f)=>f.id === "options");
+    //   if(idx !== -1){
+    //     temp.fields[idx].fields.push(
+    //   {
+    //   "id": `options-value-${temp.fields.length+1}`,
+    //   "type": "text",
+    //   "label": "option-value",
+    //   "placeholder": "Enter value of option"
+    // },
+    // {
+    //   "id": `options-label-${temp.fields.length+1}`,
+    //   "type": "text",
+    //   "label": "option-label",
+    //   "placeholder": "Enter label of option"
+    // }  );
+    // temp.fields.push(buttonObj);
+      // }else{
+        const num:number = Math.random();
+        temp.fields.push({"id": `options-${num+1}`,
+      "type": "group",
+      "label": "Options",
+      "fields":[
+      {
+      "id": `options-value-${num+1}`,
+      "type": "text",
+      "label": "option-value",
+      "placeholder": "Enter value of option"
+    },
+    {
+      "id": `options-label-${num+1}`,
+      "type": "text",
+      "label": "option-label",
+      "placeholder": "Enter label of option"
+    }
+      ],
+      "dependsOn": "type",
+      "dependsOnValue": ["select","radio"],
+      "showWhen": "includes"
+    },buttonObj);
+    return temp;
+      });
+    
+
+  }
+
   const handleFormReload = () => {
-    setFormData(initialValue);
-    localStorage.removeItem("FormData");
-    setSubmitted(false);
+    if(!open){
+
+      setFormData(initialValue);
+      localStorage.removeItem("FormData");
+      setSubmitted(false);
+    }else{
+      setModalFormData(initialValue);
+    }
   };
 
-  const handleAddField = () => {};
+  const handleAddField = (field?:FormField|undefined|null) => {
+    console.log("in Function",field);
+    if(!field.id){
+      console.log("In If COndition")
+      // return;
+    }
+    setOpen(true);
 
-  const handleRemoveField = (field:FormField) => {
-    // formStructure.fields = formStructure.fields.filter(f => f.id !== field.id);
+
+
+  };
+
+  const handleRemoveField = (field:FormField,tag:string|undefined|null) => {
+  // formStructure.fields = formStructure.fields.filter(f => f.id !== field.id);
+  if(tag === 'for-options'){
     onChange((prev)=>{
+      if(!prev) return prev;
+      const updatedStructure = { ...prev };
+      updatedStructure.fields = updatedStructure.fields.filter((f:FormField)=>f.id!==field.id);
+      return updatedStructure;
+    })
+
+    setModalFormData((prev)=>{
+      const updatedData = { ...prev };
+      delete updatedData[field.id];
+      return updatedData;
+    });
+    return;
+  }  
+  onChange((prev)=>{
         if(!prev) return prev;
         const updatedStructure = { ...prev };
-        updatedStructure.fields = updatedStructure.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+        if(field.dependsOn){
+            updatedStructure.fields = updatedStructure.fields.filter((f:FormField) => f.id !== field.id);
+        }else{
+          updatedStructure.fields = updatedStructure.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+        }
         return updatedStructure;
     }); 
     setJsonText((prev)=>{
         try{
             const parsed = JSON.parse(prev);
-            parsed.fields = parsed.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+            if(field.dependsOn){
+                parsed.fields = parsed.fields.filter((f:FormField) => f.id !== field.id);
+            }else{
+              parsed.fields = parsed.fields.filter((f:FormField) => f.id !== field.id && f.dependsOn !== field.id);
+            }
             return JSON.stringify(parsed, null, 2);
         } catch {
             return prev;
@@ -455,12 +843,21 @@ return (
     </div>
       <RefreshCw  onClick={handleFormReload}/>
     </div>
+    <div>
+      {!open ?(<ButtonComponent buttonfield={{
+        type:"button",
+        text:"+ Add Field",
+        onClick:handleAddField, 
+        buttonClasses:"mb-6 cursor-pointer px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition",
+      }} />):null}
+    </div>
+    {/* <div className='overflow-scroll'> */}
       <form onSubmit={handleSubmit} className="space-y-2">
-        {formStructure.fields.filter(shouldShowField).map((field) => (
-          <div key={field.id} className={`transition-all duration-300 overflow-hidden ${
+        {formStructure.fields.filter(shouldShowField).map((field:any) => (
+          <div key={field.id} className={`transition-all duration-300 ${
               shouldShowField(field) ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 hidden'
             }`}>
-            {field.type !== 'checkbox' && (
+            {field.type !== 'checkbox' && field.type !== 'button'  && (
               <label
                 htmlFor={field.id}
                 className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
@@ -472,7 +869,25 @@ return (
                 )}
               </label>
             )}
-
+            {field.fields && field.fields.length > 0 && (
+              field.fields.map((nestedField:FormField,i) => (
+                <div key={nestedField.id+`${i+1}`} className="ml-4">
+                <label
+                htmlFor={nestedField.id+`${i+1}`}
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
+                {nestedField.label}
+                {nestedField.required && <span className="text-red-500 ml-1">*</span>}
+                {nestedField.dependsOn && (
+                  <span className="text-xs text-blue-500 ml-2">(conditional)</span>
+                )}
+              </label>
+                  {renderField(nestedField,field.id)} 
+                </div>
+                
+              ))
+            )}
+            
             {field.type === 'checkbox' ? (
               <label className="flex items-center gap-2 cursor-pointer">
                 {renderField(field)}
@@ -481,16 +896,34 @@ return (
             ) : (
               renderField(field)
             )}
-            <ButtonComponent buttonfield={{
+            {open && ["group"].includes(field.type)?(
+                  <ButtonComponent buttonfield={{
+                type:"button",
+                buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                text:<CircleMinus />,
+                onClick:()=>handleRemoveField(field,'for-options')}}/>
+                ):(null)
+                }
+            {!open ? (<>
+            {/* <ButtonComponent buttonfield={{
                 type:"button",
                 buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
                 text:<CirclePlus />,
-                onClick:handleAddField}}/> 
+                onClick:()=>handleAddField(field)}}/>  */}
           <ButtonComponent buttonfield={{
                 type:"button",
                 buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
                 text:<CircleMinus />,
-                onClick:()=>handleRemoveField(field)}}/> 
+                onClick:()=>handleRemoveField(field)}}/>
+                </>): null}
+                {/* {open && ["select","radio"].includes(field.type) && field.id.startsWith("options-label")?(
+                  <ButtonComponent buttonfield={{
+                type:"button",
+                buttonClasses:"cursor-pointer mt-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200",
+                text:<CircleMinus />,
+                onClick:()=>handleRemoveField(field,'for-options')}}/>
+                ):(null)
+                }  */}
           </div>
         ))}
 
@@ -507,7 +940,7 @@ return (
             disabled:(!!formStructure && formStructure.fields.length === 0),
             }}/>
       </form>
-
+            {/* </div> */}
       {submitted && (
         <div className="mt-6 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
           <h3 className="text-green-800 dark:text-green-300 font-semibold mb-2">Form Data:</h3>
