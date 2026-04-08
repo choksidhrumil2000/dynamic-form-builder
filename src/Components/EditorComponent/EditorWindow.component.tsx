@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Editor from '@monaco-editor/react';
 import Ajv from 'ajv';
-import { parse } from 'json-source-map';
+// import { parse } from 'json-source-map';
 import ButtonComponent from '../ButtonComponent/ButtonComponent.component';
 import type { JsonEditorProps } from '../../types/JsonEditorProps';
 
@@ -75,9 +75,9 @@ const validate = ajv.compile(formSchema);
 
 export default function EditorWindow({
   onChange,
-  initialValue = '',
+  // initialValue = '',
   height = '500px',
-  theme = 'dark',
+  // theme = 'dark',
   jsonText,
   setJsonText
 }: JsonEditorProps) {
@@ -293,8 +293,8 @@ export default function EditorWindow({
       "placeholder": "Enter your admin code",
       "required": true,
       "dependsOn": "role",
-      "dependsOnValue": "admin",
-      "showWhen": "equals"
+      "dependsOnValue": ["admin"],
+      "showWhen": "includes"
     },
     {
       "id": "moderationArea",

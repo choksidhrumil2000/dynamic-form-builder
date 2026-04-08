@@ -95,16 +95,19 @@ export default function HomePage() {
       "type": "select",
       "label": "DependsOnValue",
       "placeholder": "Enter DependOnValue",
-      "required": false
+      "required": true,
+      "dependsOn":["dependsOn"],
+      "showWhen":"includes"
     },
     {
       "id": "showWhen",
       "type": "select",
       "label": "ShowWhen",
       "placeholder": "Enter ShowWhen value",
-      "required": false,
+      "required": true,
+      "dependsOn":["dependsOnValue"],
+      "showWhen":"includes",
       "options": [
-        { "value": "equals", "label": "Equals" },
         { "value": "includes", "label": "Includes" },
         { "value": "notEquals", "label": "Not Equals" }
       ]
@@ -163,9 +166,124 @@ export default function HomePage() {
   ]
 }`;
 
+// const ModalFormJson = `{
+//   "formTitle": "Add Field to Form",
+//   "formDescription": "Fill the details required to generate Field",
+//   "fields": [
+//     {
+//       "id": "id",
+//       "type": "text",
+//       "label": "Id",
+//       "placeholder": "Enter Id Of Field",
+//       "required": true
+//     },
+//     {
+//       "id": "label",
+//       "type": "text",
+//       "label": "label",
+//       "placeholder": "Enter label ",
+//       "required": true
+//     },
+//     {
+//       "id": "type",
+//       "type": "select",
+//       "label": "Field Type",
+//       "required": true,
+//       "options": [
+//         { "value": "text", "label": "Text" },
+//         { "value": "email", "label": "Email" },
+//         { "value": "number", "label": "Number" },
+//         { "value": "date", "label": "Date" },
+//         { "value": "select", "label": "Select" },
+//         { "value": "textarea", "label": "TextArea" },
+//         { "value": "radio", "label": "Radio Button" },
+//         { "value": "checkbox", "label": "CheckBox" }
+//       ]
+//     },
+//     {
+//       "id": "dependsOn",
+//       "type": "select",
+//       "label": "DependsOn",
+//       "placeholder": "Enter DependOnValue",
+//       "required": false
+//     },
+//     {
+//       "id": "dependsOnValue",
+//       "type": "select",
+//       "label": "DependsOnValue",
+//       "placeholder": "Enter DependOnValue",
+//       "required": false
+//     },
+//     {
+//       "id": "showWhen",
+//       "type": "select",
+//       "label": "ShowWhen",
+//       "placeholder": "Enter ShowWhen value",
+//       "required": false,
+//       "options": [
+//         { "value": "equals", "label": "Equals" },
+//         { "value": "includes", "label": "Includes" },
+//         { "value": "notEquals", "label": "Not Equals" }
+//       ]
+//     },
+//     {
+//       "id": "placeholder",
+//       "type": "text",
+//       "label": "Placeholder",
+//       "placeholder": "Enter Placeholder of Field",
+//       "dependsOn": "type",
+//       "dependsOnValue": ["text","email","number","date","textarea"],
+//       "showWhen": "includes"
+//     },
+//     {
+//       "id": "required",
+//       "type": "select",
+//       "label": "Required",
+//       "dependsOn": "type",
+//       "dependsOnValue": ["text","email","number","date","textarea","select","radio","checkbox"],
+//       "showWhen": "includes",
+//       "options": [
+//         { "value": "true", "label": "True" },
+//         { "value": "false", "label": "False" }
+//       ]
+//     },
+//     {
+//       "id": "options",
+//       "type": "group",
+//       "label": "Options",
+//       "fields":[
+//       {
+//       "id": "options-value",
+//       "type": "text",
+//       "label": "option-value",
+//       "placeholder": "Enter value of option"
+//     },
+//     {
+//       "id": "options-label",
+//       "type": "text",
+//       "label": "option-label",
+//       "placeholder": "Enter label of option"
+//     }
+//       ],
+//       "dependsOn": "type",
+//       "dependsOnValue": ["select","radio"],
+//       "showWhen": "includes"
+//     },
+//     {
+//       "id": "add-options",
+//       "type": "button",
+//       "label": "Add-Options",
+//       "dependsOn": "type",
+//       "dependsOnValue": ["select","radio"],
+//       "showWhen": "includes"
+//     }
+//   ]
+// }`;
+
 // try{
 
   const [modalFormStructure,setModalFormStructure] = useState<FormStructure | null>(JSON.parse(ModalFormJson));  
+  const [modalFormStructure2,setModalFormStructure2] = useState<FormStructure | null>(JSON.parse(ModalFormJson));  
 // }catch(err){
 //   console.log(err);
 // }
@@ -237,6 +355,7 @@ setJsonText={setJsonText}
               setJsonText={setJsonText}
               open={open}
               setOpen={setOpen}
+              modalFormJson={modalFormStructure2}
           />
           
         </div>

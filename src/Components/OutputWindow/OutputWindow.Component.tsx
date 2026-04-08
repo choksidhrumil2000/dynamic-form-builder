@@ -9,11 +9,12 @@ import ButtonComponent from '../ButtonComponent/ButtonComponent.component';
 import type { FormField } from '../../types/FormField';
 import type { FormStructure } from '../../types/FormStructure';
 import type { DynamicFormGeneratorProps } from '../../types/DynamicFormGeneratorProps';
-import { CircleMinus, CirclePlus, RefreshCw } from 'lucide-react';
+import { CircleMinus, CirclePlus, RefreshCw, X } from 'lucide-react';
 import type { propsButton } from '../../types/PropsButton';
 import type { propsInputDorpDown } from '../../types/propsInputDorpDown';
 import type { propsInputCheckBox } from '../../types/propsInputCheckBox';
 import type { propsInputRadio } from '../../types/propsInputRadio';
+// import { stringify } from 'json-source-map';
 
 // interface FormField {
 //   id: string;
@@ -38,15 +39,20 @@ import type { propsInputRadio } from '../../types/propsInputRadio';
 //   formStructure: FormStructure | null;
 // }
 
-export default function OutputWindow({ formStructure,onChange,jsonText,setJsonText,open,setOpen }: DynamicFormGeneratorProps) {
+export default function OutputWindow({ formStructure,onChange,jsonText,setJsonText,open,setOpen,modalFormJson }: DynamicFormGeneratorProps) {
   const initialValue = {};
   const [formData, setFormData] = useState<Record<string, any>>(initialValue);
   const [submitted, setSubmitted] = useState(false);
 
   const [isInitialMount, setIsInitialMount] = useState(true);
 
-  const [modalFormData,setModalFormData] = useState<Record<string, any>>(initialValue);
+  const [modalFormData,setModalFormData] = useState<Record<string,any>>(initialValue);
 
+  const [error,setError] = useState<string | null>(null);
+
+  const [formErrors,setFormErrors] = useState<Record<string,any>>({});
+
+  // const [currentModalJSon,setCurrentMOdalJson] = useState<FormStructure| null>(formStructure);
 //   const STORAGE_KEY = 'FormData';
 
 //   const loadSavedFormData = () => {
@@ -181,6 +187,34 @@ useEffect(() => {
   if (hasChanges) {
     setModalFormData(newData);
   }
+
+  //-----------------------------------------
+  // if(open){
+  //   const JsonTextData = JSON.parse(jsonText);
+  //   const selectFields:any[] = [];
+  //   const optionsFields:any[] = [];
+  //   JsonTextData.fields.forEach((field:FormField)=>{
+  //     if(field.type === 'select'){
+  //       selectFields.push(field);
+  //       optionsFields.push(...(field.options));
+  //     }
+  //   });
+
+  //   console.log("Select Fields",selectFields);
+  //   console.log("Options Fields",optionsFields);
+
+  //   const tempStructure = JSON.parse(JSON.stringify(formStructure));
+  //   tempStructure.fields.forEach((f)=>{
+  //     if(f.id === 'dependsOn'){
+  //       const options = selectFields.map((f)=> ({value:f.id,label:f.label}));
+  //        f.options = [...options];
+  //     }else if(f.id === 'dependsOnValue'){
+  //         f.options = [...optionsFields];
+  //     }
+  //   })
+  //   onChange((prev)=>({...prev,...tempStructure}));
+  // }
+  //------------------------------------------------------------------------
 }, [formStructure, open, isInitialMount]);
 
 // useEffect(()=>{
@@ -215,28 +249,118 @@ useEffect(() => {
 
   if(open){
     const JsonTextData = JSON.parse(jsonText);
-    let selectFields = [];
-    let optionsFields = [];
+    const selectFields:any[] = [];
+    const optionsFields:any[] = [];
     JsonTextData.fields.forEach((field:FormField)=>{
       if(field.type === 'select'){
         selectFields.push(field);
-        optionsFields.push(...field.options);
+        optionsFields.push(...(field.options));
       }
     });
 
+    console.log("Select Fields",selectFields);
+    console.log("Options Fields",optionsFields);
+
     const tempStructure = JSON.parse(JSON.stringify(formStructure));
+    let options:{value:string,label:string}[] = [];
+    // let dovArr = [];
     tempStructure.fields.forEach((f)=>{
       if(f.id === 'dependsOn'){
-        const options = selectFields.map((f)=> ({value:f.id,label:f.label}));
+        options = selectFields.map((f)=> ({value:f.id,label:f.label}));
          f.options = [...options];
       }else if(f.id === 'dependsOnValue'){
+
           f.options = [...optionsFields];
+          f.dependsOnValue = options.map((f)=>(f.value));
+      }else if(f.id === 'showWhen'){
+        f.dependsOnValue = optionsFields.map((f)=>(f.value));
       }
     })
-    onChange(tempStructure);
+    onChange((prev)=>({...prev,...tempStructure}));
   }
 }, []); 
 
+// Add this useEffect to handle modal opening
+// useEffect(() => {
+//   if (open && modalFormJson) {
+  //   // When modal opens, set the formStructure to modalFormJson
+  //   console.log("Modal opened with modalFormJson:", modalFormJson);
+  //   // The onChange will be called to update the parent's formStructure
+  //   onChange(modalFormJson);
+    
+  //   // Initialize modalFormData with empty values based on modalFormJson structure
+  //   const initialModalData: Record<string, any> = {};
+  //   modalFormJson.fields?.forEach((field: FormField) => {
+  //     if (field.type === 'checkbox') {
+  //       initialModalData[field.id] = false;
+  //     } else if (field.type === 'radio' || field.type === 'select') {
+  //       initialModalData[field.id] = '';
+  //     } else if (field.type === 'group') {
+  //       initialModalData[field.id] = {};
+  //     } else {
+  //       initialModalData[field.id] = '';
+  //     }
+  //   });
+    
+  //   setModalFormData(initialModalData);
+  //   setFormErrors({}); // Clear any previous errors
+  //   setError(null); // Clear ID error
+  // }
+
+//   const JsonTextData = JSON.parse(jsonText);
+//     const selectFields:any[] = [];
+//     const optionsFields:any[] = [];
+//     JsonTextData.fields.forEach((field:FormField)=>{
+//       if(field.type === 'select'){
+//         selectFields.push(field);
+//         optionsFields.push(...(field.options));
+//       }
+//     });
+
+//     console.log("Select Fields",selectFields);
+//     console.log("Options Fields",optionsFields);
+
+//     const tempStructure = JSON.parse(JSON.stringify(formStructure));
+//     tempStructure.fields.forEach((f)=>{
+//       if(f.id === 'dependsOn'){
+//         const options = selectFields.map((f)=> ({value:f.id,label:f.label}));
+//          f.options = [...options];
+//       }else if(f.id === 'dependsOnValue'){
+//           f.options = [...optionsFields];
+//       }
+//     })
+//     onChange(tempStructure);
+//   }
+// }, [open,formStructure]);
+
+
+// useEffect(()=>{
+// if(open){
+//   const JsonTextData = JSON.parse(jsonText);
+//     const selectFields:any[] = [];
+//     const optionsFields:any[] = [];
+//     JsonTextData.fields.forEach((field:FormField)=>{
+//       if(field.type === 'select'){
+//         selectFields.push(field);
+//         optionsFields.push(...(field.options));
+//       }
+//     });
+
+//     console.log("Select Fields",selectFields);
+//     console.log("Options Fields",optionsFields);
+
+//     const tempStructure = JSON.parse(JSON.stringify(formStructure));
+//     tempStructure.fields.forEach((f)=>{
+//       if(f.id === 'dependsOn'){
+//         const options = selectFields.map((f)=> ({value:f.id,label:f.label}));
+//          f.options = [...options];
+//       }else if(f.id === 'dependsOnValue'){
+//           f.options = [...optionsFields];
+//       }
+//     })
+//     onChange(tempStructure);
+// }
+// },[open])
 // useEffect(() =>{
 //     setFormData(initialValue);
 //     const storedJson = localStorage.getItem("FormData");
@@ -257,44 +381,124 @@ useEffect(() => {
     );
   }
 
-  const shouldShowField = (field: FormField): boolean => {
-    // If no dependency, always show
-    if (!field.dependsOn) {
-      return true;
-    }
+  // const shouldShowField = (field): boolean => {
+  //   // If no dependency, always show
+  //   if (!field.dependsOn) {
+  //     return true;
+  //   }
 
-    console.log("here in Should SAhow Field")
-    let dependentValue;
-    if(!open){
+  //   console.log("here in Should SAhow Field")
+  //   let dependentValue;
+  //   if(!open){
 
-      dependentValue = formData[field.dependsOn];
-    }
-    else{
-      dependentValue = modalFormData[field.dependsOn];
-    }
-    // console.log(dependentValue, field.dependsOn, formData, "Dependent Value and Form Data in shouldShowField");
-    const showWhenType = field.showWhen || 'equals';
+  //     dependentValue = formData[field.dependsOn];
+  //   }
+  //   else{
+  //     dependentValue = modalFormData[field.dependsOn];
+  //   }
+  //   // console.log(dependentValue, field.dependsOn, formData, "Dependent Value and Form Data in shouldShowField");
+  //   const showWhenType = field.showWhen || 'equals';
 
-    switch (showWhenType) {
-      case 'equals':
-        // Single value comparison
-        return dependentValue === field.dependsOnValue;
+  //   switch (showWhenType) {
+  //     // case 'equals':
+  //     //   // Single value comparison
+  //     //   return dependentValue === field.dependsOnValue;
 
-      case 'includes':
-        // Check if dependent value is in array
-        if (Array.isArray(field.dependsOnValue)) {
-          return field.dependsOnValue.includes(dependentValue);
+  //     case 'includes':
+  //       // Check if dependent value is in array
+  //       if (Array.isArray(field.dependsOnValue)) {
+  //         if(Array.isArray(dependentValue)){
+  //           return field.dependsOnValue.includes(dependentValue[0]);
+  //         }
+  //         return field.dependsOnValue.includes(dependentValue);
+  //       }
+  //       return false;
+
+  //     case 'notEquals':
+  //     //   // Show when NOT equal
+  //     if(Array.isArray(dependentValue)){
+  //       dependentValue.forEach((e)=>{
+  //         if(field.)
+  //       })
+  //       return !field.dependsOnValue.includes(dependentValue);
+  //     }else{
+  //         return dependentValue !== field.dependsOnValue;
+
+  //       }
+
+  //     default:
+  //       return true;
+  //   }
+  // };
+
+  const shouldShowField = (field): boolean => {
+  // If no dependency, always show
+  if (!field.dependsOn) {
+    return true;
+  }
+
+  console.log("here in Should Show Field");
+  
+  // ============ GET DEPENDENT VALUE BASED ON MODAL STATE ============
+  const dependentValue = !open ? formData[field.dependsOn] : modalFormData[field.dependsOn];
+  // ============ END ============
+
+  // const showWhenType = field.showWhen || 'equals';
+  const showWhenType = field.showWhen;
+
+  // ============ LOGIC EXPLANATION ============
+  // This function decides whether to SHOW or HIDE a field based on:
+  // 1. field.dependsOn = the ID of another field it depends on
+  // 2. dependentValue = the current VALUE of that dependent field
+  // 3. field.dependsOnValue = the VALUES that trigger showing this field
+  // 4. showWhenType = the COMPARISON TYPE (includes, notEquals, equals)
+  // ============ END EXPLANATION ============
+
+  if(!dependentValue)return false;
+
+  switch (showWhenType) {
+    case 'includes':
+      // ============ SHOW FIELD IF: dependentValue is in the dependsOnValue array ============
+      
+      // If dependsOnValue is an array of acceptable values
+      if (Array.isArray(field.dependsOnValue)) {
+        
+        // If dependentValue is also an array (multiple selections)
+        if (Array.isArray(dependentValue)) {
+          // Show field if ANY selected value matches ANY acceptable value
+          return dependentValue.some(val => field.dependsOnValue.includes(val));
+          // EXAMPLE: If user selected ["option1", "option2"] and dependsOnValue is ["option1", "option3"]
+          // Result: TRUE (because "option1" is in both arrays)
         }
-        return false;
+        
+        // If dependentValue is a single value
+        return field.dependsOnValue.includes(dependentValue);
+        // EXAMPLE: If user selected "option1" and dependsOnValue is ["option1", "option3"]
+        // Result: TRUE (because "option1" is in the array)
+      }
+      return false;
+      // ============ END OF INCLUDES CASE ============
 
-      case 'notEquals':
-        // Show when NOT equal
-        return dependentValue !== field.dependsOnValue;
-
-      default:
-        return true;
-    }
-  };
+    case 'notEquals':
+      // ============ SHOW FIELD IF: dependentValue is NOT in the dependsOnValue array ============
+      
+      // If dependentValue is an array (multiple selections)
+      if (Array.isArray(dependentValue)) {
+        // Show field if NONE of the selected values are in the dependsOnValue array
+        return !dependentValue.some(val => field.dependsOnValue.includes(val));
+        // EXAMPLE: If user selected ["option4", "option5"] and dependsOnValue is ["option1", "option3"]
+        // Result: TRUE (because none of the selected values are in the array)
+      }
+      
+      // If dependentValue is a single value
+      return !field.dependsOnValue.includes(dependentValue);
+      // EXAMPLE: If user selected "option4" and dependsOnValue is ["option1", "option3"]
+      // Result: TRUE (because "option4" is NOT in the array)
+      // ============ END OF NOTEQUALS CASE ============
+ default:
+      return true;
+  }
+};
 
   // const handleInputChange = (fieldId: string, value: any,parentId?: string | undefined | null) => {
   //   if(!open){
@@ -328,38 +532,199 @@ useEffect(() => {
   //   }
   // };
 
-  const handleInputChange = (fieldId: string, value: any, parentId?: string | undefined | null) => {
-  if (!open) {
-    setFormData((prev) => ({
-      ...prev,
-      [fieldId]: value,
-    }));
+  // New function to validate individual field on change
+const validateFieldOnChange = (fieldId: string, value: any) => {
+  const field = formStructure?.fields.find(f => f.id === fieldId);
+  if (!field) return;
+
+  const errorObj: Record<string, any> = { ...formErrors };
+
+  // Check if field is required
+  if (field.required && !value) {
+    errorObj[fieldId] = `${field.label || fieldId} is required!!`;
+  } 
+  // Email validation
+  else if (field.type === 'email' && value) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      errorObj[fieldId] = `${field.label || fieldId} is not valid!!`;
+    } else {
+      delete errorObj[fieldId];
+    }
+  }
+  // Number validation
+  else if (field.type === 'number' && value) {
+    if (isNaN(value)) {
+      errorObj[fieldId] = `${field.label || fieldId} must be a number!!`;
+    } else {
+      delete errorObj[fieldId];
+    }
+  }
+  // Date validation
+  else if (field.type === 'date' && value) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(value)) {
+      errorObj[fieldId] = `${field.label || fieldId} must be a valid date!!`;
+    } else {
+      delete errorObj[fieldId];
+    }
+  }
+  // Clear error if field becomes valid
+  else {
+    delete errorObj[fieldId];
+  }
+
+  setFormErrors(errorObj);
+};
+
+  const handleInputChange = (fieldId: string, value: any, parentId:string) => {
+    if (!open) {
+      setFormData((prev) => ({
+        ...prev,
+        [fieldId]: value,
+      }));
+      // validateFieldOnChange(fieldId,value);
   } else {
+    if(fieldId === 'id'){
+      if(!checkIfIdisUnique(value)){
+        setError("ID must be unique. This ID already exists.");
+      }else{
+        setError(null);
+      }
+    }
     setModalFormData((prev) => {
       const tempObj = JSON.parse(JSON.stringify(prev));
       
       if (parentId) {
+      // if (parentField.id?.startsWith("options")){
+      //   if(!tempObj["options"])
+      //     tempObj["options"] = [];
+      //     tempObj["options-combine"] = 
+
+      //   const optionidx = tempObj["options"].findIndex((op,i)=>{
+      //     if(op[parentField.id]){
+      //       return i;
+      //     }
+      //   })
+      //   const optionobj = tempObj["options"].findIndex((op,i)=>{
+      //     if(op[parentField.id]){
+      //       return op;
+      //     }
+      //   })
+
+      //   if(optionidx !== -1){
+      //     if(!optionobj["value"]){
+      //         if(parentField?.fields[0].id === fieldId){
+      //     optionobj["value"] = value;
+      //   }}
+      //   if(!optionobj["label"]){
+      //     if(parentField?.fields[1].id === fieldId){
+      //     optionobj["label"] = value;
+      //   }  
+      //   }
+      //   tempObj["options"].push(tempObj["options"][parentField.id])
+      //  }else{
+      //   tempObj["options"].push({[parentField.id]:{}})
+      //  }
+        
+        // const obj:Record<string,any> = {};
+        // if(parentField?.fields[0].id === fieldId){
+        //   obj[parentField.id]["value"] = value;
+        // }
+        // if(parentField?.fields[1].id === fieldId){
+        //   obj[parentField.id]["label"] = value;
+        // }
+        
+      //   obj[(fieldId.split('-')[2])]["value"] = value;
+      // }
+      // if(fieldId.startsWith('options-label')){
+      //   obj[(fieldId.split('-')[2])]["label"] = value;
+      // }
+      // tempObj.options.push(obj[fieldId.split('-')[2]]);
+        
+    // }else{
         // Initialize parent object if it doesn't exist
         if (!tempObj[parentId]) {
           tempObj[parentId] = {};
         }
+      // }
+        // const optionALone = {};
+        // optionALone[fieldId] = value;
         // Store nested field value
         tempObj[parentId][fieldId] = value;
+        // tempObj[parentId].push({[fieldId]:value});
       } else {
         // Store top-level field value
-        tempObj[fieldId] = value;
+        if(fieldId === 'dependsOnValue'){
+          if(!tempObj[fieldId]){
+            tempObj[fieldId] = [];
+            // tempObj[fieldId].push(value);
+          }
+          // else{
+            if(!tempObj[fieldId].includes(value))
+              tempObj[fieldId].push(value);
+          // }
+          
+        }else{
+
+          tempObj[fieldId] = value;
+        }
       }
       
       console.log("Updated modalFormData:", tempObj);
       return tempObj;
     });
+    
   }
+  validateFieldOnChange(fieldId,value);
+  // isValidForm();
 };
+
+const checkIfIdisUnique = (id:string):boolean=>{
+  const tempJsonTextData = JSON.parse(jsonText);
+  const field = tempJsonTextData.fields.find((f:FormField)=>f.id === id);
+  return !field;
+}
+
+
+
+const isValidForm = ()=>{
+  let errArr:Record<string,any> = {};
+  if(open){
+    errArr = validateByData(modalFormData); 
+  }else{
+    errArr = validateByData(formData);
+  }
+  setFormErrors((prev)=>({...prev,...errArr}));
+  return Object.keys(errArr).length>0
+}
+
+const validateByData = (data:Record<string,any>)=>{
+  const errArr:Record<string,any> = {};
+formStructure.fields.forEach((f)=>{
+      if(f.required && !data[f.id]){
+        errArr[f.id]=`${f.id} is required!!`;
+      }
+      if(f.type === 'email' && data[f.id]){
+         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if(!emailRegex.test(data[f.id])){
+
+      errArr[f.id] = `${f.id} is not Valid!!`
+    }
+      }
+    })
+
+    return errArr;
+}
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormErrors({});
+    if(isValidForm()){
+      console.log("Errors:",formErrors);
+      return;
+    }
     if(!open){
-
       setSubmitted(true);
       console.log('Form Data:', formData);
       localStorage.setItem("FormData",JSON.stringify(formData));
@@ -368,14 +733,57 @@ useEffect(() => {
       console.log('Modal Form Data:', modalFormData);
       console.log('Json text',jsonText );
       console.log(formStructure);
-      const tempData = convertmodalDataToJSON(modalFormData);
+      // const modalFormDataKeys:string[] = Object.keys(modalFormData);
+      // modalFormDataKeys.forEach((key)=>{
+      //   if(key.startsWith("options")){
+      //     modalFormData[key]
+      //   }
+      // })
+
+      const tempModalFormData = JSON.parse(JSON.stringify(modalFormData));
+      const tempModalFormDataKeys:string[] = Object.keys(tempModalFormData);
+      const options :{value:string,label:string}[]= [];
+      let optionObj:{value:string,label:string} = {value:"",label:""};
+      tempModalFormDataKeys.forEach((key)=>{
+        if(key.startsWith("options")){
+          optionObj = {value:"",label:""};
+          const options_keys = Object.keys(tempModalFormData[key]);
+          console.log("Keys of Option:",options_keys)
+          optionObj["value"] = tempModalFormData[key][options_keys[0]];
+          optionObj["label"] = tempModalFormData[key][options_keys[1]];
+          console.log(optionObj)
+          options.push(optionObj);
+        }
+      })
+      tempModalFormData.options = options;
+      setModalFormData((prev)=>({...prev,options}))
+
+
+      // const tempData = convertmodalDataToJSON(modalFormData);
+      const tempData = convertmodalDataToJSON(tempModalFormData);
       const tempJSONTextData = JSON.parse(jsonText);
-      tempJSONTextData.fields.push(tempData);
+      if(tempData.dependsOn){
+        const idx = tempJSONTextData.fields.findIndex((f)=>f.id === tempData.dependsOn);
+        if(idx!==1){
+          tempJSONTextData.fields.splice(idx+1,0,tempData);
+        }else{
+
+          tempJSONTextData.fields.push(tempData);
+        }
+      }else{
+        tempJSONTextData.fields.push(tempData);
+      }
       setJsonText(JSON.stringify(tempJSONTextData, null, 2));
+      onChange((prev)=>({...prev,...modalFormJson}));
       setOpen(false);
     }
     // console.log(submitted);
   };
+
+  // const handleCloseModal = ()=>{
+  //   onChange(modalFormJson);
+  //   setOpen(false);
+  // }
 
   const convertmodalDataToJSON = (data:any)=>{
     return {
@@ -659,24 +1067,24 @@ tempObj ={
       const temp = {...prev}
       const buttonObj = temp.fields.find((f:FormField) => f.id === "add-options");
       temp.fields = temp.fields.filter((f:FormField) => f.id !== "add-options");
-      // let idx = temp.fields.findIndex((f)=>f.id === "options");
+      let idx = temp.fields.findIndex((f)=>f.id === "options");
+      const num:number = Math.random();
     //   if(idx !== -1){
     //     temp.fields[idx].fields.push(
     //   {
-    //   "id": `options-value-${temp.fields.length+1}`,
+    //   "id": `options-value-${num+1}`,
     //   "type": "text",
     //   "label": "option-value",
     //   "placeholder": "Enter value of option"
     // },
     // {
-    //   "id": `options-label-${temp.fields.length+1}`,
+    //   "id": `options-label-${num+1}`,
     //   "type": "text",
     //   "label": "option-label",
     //   "placeholder": "Enter label of option"
     // }  );
     // temp.fields.push(buttonObj);
-      // }else{
-        const num:number = Math.random();
+    //   }else{
         temp.fields.push({"id": `options-${num+1}`,
       "type": "group",
       "label": "Options",
@@ -698,9 +1106,9 @@ tempObj ={
       "dependsOnValue": ["select","radio"],
       "showWhen": "includes"
     },buttonObj);
+  // }
     return temp;
       });
-    
 
   }
 
@@ -715,19 +1123,23 @@ tempObj ={
     }
   };
 
-  const handleAddField = (field?:FormField|undefined|null) => {
+  const handleAddField = (field?:any) => {
     console.log("in Function",field);
-    if(!field.id){
-      console.log("In If COndition")
-      // return;
-    }
+    // if(!field.id){
+    //   console.log("In If COndition")
+    //   // return;
+    // }
+    // onChange((prev)=>({...prev,...(JSON.parse(JSON.stringify(modalFormJson)))}));
     setOpen(true);
+    // if(open){
+    //   console.log("From Add Field Function ",formStructure);
+    // }
 
 
 
   };
 
-  const handleRemoveField = (field:FormField,tag:string|undefined|null) => {
+  const handleRemoveField = (field:FormField,tag?:string|undefined|null) => {
   // formStructure.fields = formStructure.fields.filter(f => f.id !== field.id);
   if(tag === 'for-options'){
     onChange((prev)=>{
@@ -852,7 +1264,7 @@ return (
       }} />):null}
     </div>
     {/* <div className='overflow-scroll'> */}
-      <form onSubmit={handleSubmit} className="space-y-2">
+      <form onSubmit={handleSubmit} className="space-y-2" noValidate>
         {formStructure.fields.filter(shouldShowField).map((field:any) => (
           <div key={field.id} className={`transition-all duration-300 ${
               shouldShowField(field) ? 'opacity-100 max-h-96' : 'opacity-0 max-h-0 hidden'
@@ -870,7 +1282,7 @@ return (
               </label>
             )}
             {field.fields && field.fields.length > 0 && (
-              field.fields.map((nestedField:FormField,i) => (
+              field.fields.map((nestedField:FormField,i:number) => (
                 <div key={nestedField.id+`${i+1}`} className="ml-4">
                 <label
                 htmlFor={nestedField.id+`${i+1}`}
@@ -896,6 +1308,26 @@ return (
             ) : (
               renderField(field)
             )}
+            {open && field.id === 'dependsOnValue' &&
+              modalFormData['dependsOnValue'] && modalFormData['dependsOnValue'].length > 0 && (
+              <div className='flex flex-wrap gap-1 mt-1'>
+                {modalFormData['dependsOnValue'].map((val:string,index:number)=>(
+                  <span key={index} className='bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-2 py-1 rounded-full text-xs'>
+                    {val}
+                    <X className='inline' onClick={()=>{
+                      setModalFormData((prev)=>{
+                        const updatedValues = prev['dependsOnValue'].filter((v:string)=>v!==val);
+                        return {...prev, 'dependsOnValue': updatedValues};
+                      });
+                    }} />
+
+                  </span>
+                ))}
+              </div>)
+            }
+            {open && field.id === 'id' && error && (
+              <p className="text-red-500 text-xs mt-1">{error}</p>
+            )}
             {open && ["group"].includes(field.type)?(
                   <ButtonComponent buttonfield={{
                 type:"button",
@@ -904,6 +1336,11 @@ return (
                 onClick:()=>handleRemoveField(field,'for-options')}}/>
                 ):(null)
                 }
+              {formErrors && formErrors[field.id] && (
+                <p className='text-red-500 text-xs mt-1 '>
+                  {formErrors[field.id]}
+                </p>
+              )}
             {!open ? (<>
             {/* <ButtonComponent buttonfield={{
                 type:"button",
