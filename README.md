@@ -1,75 +1,154 @@
-# React + TypeScript + Vite
+# 🧩 Dynamic Form Generator with JSON Editor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A powerful React + TypeScript application that allows you to **build, edit, and preview dynamic forms using JSON schema** in real-time. It includes a Monaco-based editor, schema validation, conditional fields, and a live form renderer.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🚀 Features
 
-## React Compiler
+- 📝 **JSON Editor (Monaco)**
+  - Syntax highlighting
+  - Auto-formatting
+  - Live validation
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- ✅ **Schema Validation (AJV)**
+  - Validates JSON structure against schema
+  - Displays inline errors with exact line mapping
 
-Note: This will impact Vite dev & build performances.
+- 🧠 **Dynamic Form Rendering**
+  - Generates forms from JSON configuration
+  - Supports multiple field types
 
-## Expanding the ESLint configuration
+- 🔀 **Conditional Fields**
+  - Show/hide fields dynamically using:
+    - `dependsOn`
+    - `dependsOnValue`
+    - `showWhen` (`includes`, `notEquals`)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 🧱 **Nested Fields Support**
+  - Grouped fields (field inside field)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- 💾 **Local Storage Persistence**
+  - Saves JSON and form data automatically
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- 🛠️ **Form Builder Mode**
+  - Add/remove fields dynamically
+  - Create select/radio options on the fly
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+---
+
+## 🏗️ Tech Stack
+
+- **Frontend:** React + TypeScript
+- **Editor:** Monaco Editor (`@monaco-editor/react`)
+- **Validation:** AJV (Another JSON Validator)
+- **Icons:** Lucide React
+- **Styling:** Tailwind CSS
+
+---
+
+## 📌 JSON Schema Overview
+
+Example structure:
+
+```json
+{
+  "formTitle": "User Registration",
+  "formDescription": "Fill your details",
+  "fields": [
+    {
+      "id": "email",
+      "type": "email",
+      "label": "Email",
+      "required": true
+    }
+  ]
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🔀 Conditional Fields Example
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```json
+{
+  "id": "adminCode",
+  "type": "text",
+  "label": "Admin Code",
+  "dependsOn": "role",
+  "dependsOnValue": ["admin"],
+  "showWhen": "includes"
+}
 ```
+
+---
+
+## 🎯 Supported Field Types
+
+- `text`
+- `email`
+- `number`
+- `textarea`
+- `select`
+- `checkbox`
+- `radio`
+- `date`
+- `group` (nested fields)
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/choksidhrumil2000/dynamic-form-builder.git
+cd dynamic-form-builder
+npm install
+npm run dev
+```
+
+---
+
+## 🧪 Validation Rules
+
+- Required fields
+- Email format validation
+- Number validation
+- Date format validation
+- Enum/type validation via AJV
+
+---
+
+## 🧠 How It Works
+
+1. Write JSON in the editor
+2. JSON is validated using AJV
+3. Valid JSON is converted into form structure
+4. Form renders dynamically
+5. User input is stored in state/localStorage
+
+---
+
+## 📸 Screenshots (Optional)
+
+![App ScreenShot](./src/assets/DynamicFormBuilderAppScreenshot.png)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open issues or submit PRs.
+
+---
+
+## 📄 License
+
+MIT License
+
+---
+
+## 👨‍💻 Author
+
+Your Name
+GitHub: https://github.com/choksidhrumil2000
+
+---
