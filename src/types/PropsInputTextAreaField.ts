@@ -9,4 +9,3 @@ export interface PropsInputTextAreaField{
     onChange:(e:React.ChangeEvent<HTMLTextAreaElement>)=>void,
     baseInputClasses:string,
 }
-}
