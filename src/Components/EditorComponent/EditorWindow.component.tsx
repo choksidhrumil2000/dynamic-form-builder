@@ -3,9 +3,26 @@ import Editor, { type OnMount } from "@monaco-editor/react";
 import Ajv from "ajv";
 // import { parse } from 'json-source-map';
 import ButtonComponent from "../ButtonComponent/ButtonComponent.component";
-import type { JsonEditorProps } from "../../types/JsonEditorProps";
 import type { editor } from "monaco-editor";
 import type { ErrorObject } from "ajv"; 
+
+import type { Dispatch, SetStateAction } from "react";
+import type { FormStructure } from "../OutputWindow/OutputWindow.Component";
+
+export interface JsonEditorProps {
+  // onChange?: (jsonData: any) => void;
+  // onChange?: Dispatch<SetStateAction<string|null>>
+  // onChange?: (value: unknown) => void;
+  onChange?:Dispatch<SetStateAction<FormStructure|null>>
+  // onChange?: (value: FormStructure | null | Dispatch<SetStateAction<FormStructure | null>>) => void | Dispatch<SetStateAction<FormStructure | null>>;
+  initialValue?: string;
+  height?: string;
+  theme?: 'light' | 'dark';
+  jsonText:string;
+  // setJsonText:(text:string)=>void;
+    setJsonText:Dispatch<SetStateAction<string>>;
+
+}
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 

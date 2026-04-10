@@ -1,20 +1,49 @@
 import React, { useEffect, useState } from "react";
-import InputTextField from "../InputComponents/InputTextField/InputTextField.Component";
-import type { propsInputFields } from "../../types/propsInputFields";
-import InputTextArea from "../InputComponents/InputTextArea/InputTextArea.component";
-import InputDropDown from "../InputComponents/InputDropDown/InputDropDown.component";
-import InputCheckBox from "../InputComponents/InputCheckBox/InputCheckBox.component";
-import InputRadio from "../InputComponents/InputRadio/InputRadio.component";
-import ButtonComponent from "../ButtonComponent/ButtonComponent.component";
-import type { FormField } from "../../types/FormField";
-import type { DynamicFormGeneratorProps } from "../../types/DynamicFormGeneratorProps";
+import InputTextField, { type propsInputFields } from "../InputComponents/InputTextField/InputTextField.Component";
+import InputTextArea, { type PropsInputTextAreaField } from "../InputComponents/InputTextArea/InputTextArea.component";
+import InputDropDown, { type propsInputDorpDown } from "../InputComponents/InputDropDown/InputDropDown.component";
+import InputCheckBox, { type propsInputCheckBox } from "../InputComponents/InputCheckBox/InputCheckBox.component";
+import InputRadio, { type propsInputRadio } from "../InputComponents/InputRadio/InputRadio.component";
+import ButtonComponent, { type propsButton } from "../ButtonComponent/ButtonComponent.component";
 import { CircleMinus, RefreshCw, X } from "lucide-react";
-import type { propsButton } from "../../types/PropsButton";
-import type { propsInputDorpDown } from "../../types/propsInputDorpDown";
-import type { propsInputCheckBox } from "../../types/propsInputCheckBox";
-import type { propsInputRadio } from "../../types/propsInputRadio";
-import type { FormStructure } from "../../types/FormStructure";
-import type { PropsInputTextAreaField } from "../../types/PropsInputTextAreaField";
+
+import type { Dispatch, SetStateAction } from "react";
+
+
+
+export interface FormField {
+  id: string;
+  type: string;
+  label: string;
+  placeholder?: string;
+  required?: boolean;
+  options?: { value: string; label: string }[] | undefined;
+  fields?:FormField[];
+  validation?: any;
+  dependsOn?: string;
+  dependsOnValue?: string | string[];
+  showWhen?: 'equals' | 'includes' | 'notEquals';
+}
+
+export interface FormStructure {
+  formTitle: string;
+  formDescription?: string;
+  fields: FormField[];
+}
+
+export interface DynamicFormGeneratorProps {
+  formStructure?: FormStructure | null;
+  // onChange?:(jsonData:FormStructure | string | null | Dispatch<SetStateAction<FormStructure|null>>)=>void
+  // onChange?:(jsonData:Dispatch<SetStateAction<FormStructure | null>>)=>void;
+  // onChange?:((prev:FormStructure)=>Dispatch<SetStateAction<FormStructure | null>>)=>void;
+  onChange?:Dispatch<SetStateAction<FormStructure | null>>;
+  jsonText?:string;
+  // setJsonText?:(text:string | Dispatch<SetStateAction<string|undefined|null>>)=>void;
+  setJsonText?:Dispatch<SetStateAction<string>>;
+  open?:boolean;
+  setOpen?:(open:boolean)=>void;
+  modalFormJson?:FormStructure | null;
+}
 
 export default function OutputWindow({
   formStructure,
@@ -26,29 +55,29 @@ export default function OutputWindow({
   modalFormJson,
 }: DynamicFormGeneratorProps) {
   const initialValue = {};
-  const [formData, setFormData] = useState<Record<string, any>>(initialValue);
+  // const [formData, setFormData] = useState<Record<string, any>>(initialValue);
   const [submitted, setSubmitted] = useState(false);
 
   const [isInitialMount, setIsInitialMount] = useState(true);
 
-  const [modalFormData, setModalFormData] =
-    useState<Record<string, any>>(initialValue);
+  // const [modalFormData, setModalFormData] =
+    // useState<Record<string, any>>(initialValue);
 
   const [error, setError] = useState<string | null>(null);
 
-  const [formErrors, setFormErrors] = useState<Record<string, any>>({});
+  // const [formErrors, setFormErrors] = useState<Record<string, any>>({});
 
 
-//   type FormValue = string | number | boolean | string[] | undefined;
+  type FormValue = string | number | boolean | string[] | undefined  | {value:string,label:string}[];
 
-// type FormDataType = Record<string, FormValue>;
+type FormDataType = Record<string, FormValue | Record<string,FormValue>>;
 
-// const [formData, setFormData] = useState<FormDataType>(initialValue);
-// const [modalFormData, setModalFormData] = useState<FormDataType>(initialValue);
-// const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+const [formData, setFormData] = useState<FormDataType>(initialValue);
+const [modalFormData, setModalFormData] = useState<FormDataType>(initialValue);
+const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  function shouldShowField(field: any): boolean {
-  // function shouldShowField(field: FormField): boolean{  
+  // function shouldShowField(field: any): boolean {
+  function shouldShowField(field: FormField): boolean{  
   // If no dependency, always show
     if (!field.dependsOn) {
       return true;
@@ -68,7 +97,7 @@ export default function OutputWindow({
     // 1. field.dependsOn = the ID of another field it depends on
     // 2. dependentValue = the current VALUE of that dependent field
     // 3. field.dependsOnValue = the VALUES that trigger showing this field
-    // 4. showWhenType = the COMPARISON TYPE (includes, notEquals, equals)
+    // 4. showWhenType = the COMPARISON TYPE (includes, notEquals)
     // ============ END EXPLANATION ============
 
     if (!dependentValue) return false;
@@ -83,14 +112,14 @@ export default function OutputWindow({
           if (Array.isArray(dependentValue)) {
             // Show field if ANY selected value matches ANY acceptable value
             return dependentValue.some((val) =>
-              field.dependsOnValue.includes(val),
+              field.dependsOnValue?.includes(val as string),
             );
             // EXAMPLE: If user selected ["option1", "option2"] and dependsOnValue is ["option1", "option3"]
             // Result: TRUE (because "option1" is in both arrays)
           }
 
           // If dependentValue is a single value
-          return field.dependsOnValue.includes(dependentValue);
+          return field.dependsOnValue.includes(dependentValue as string);
           // EXAMPLE: If user selected "option1" and dependsOnValue is ["option1", "option3"]
           // Result: TRUE (because "option1" is in the array)
         }
@@ -104,14 +133,14 @@ export default function OutputWindow({
         if (Array.isArray(dependentValue)) {
           // Show field if NONE of the selected values are in the dependsOnValue array
           return !dependentValue.some((val) =>
-            field.dependsOnValue.includes(val),
+            field.dependsOnValue?.includes(val as string),
           );
           // EXAMPLE: If user selected ["option4", "option5"] and dependsOnValue is ["option1", "option3"]
           // Result: TRUE (because none of the selected values are in the array)
         }
 
         // If dependentValue is a single value
-        return !field.dependsOnValue.includes(dependentValue);
+        return !field.dependsOnValue?.includes(dependentValue as string);
       // EXAMPLE: If user selected "option4" and dependsOnValue is ["option1", "option3"]
       // Result: TRUE (because "option4" is NOT in the array)
       // ============ END OF NOTEQUALS CASE ============
@@ -137,7 +166,7 @@ export default function OutputWindow({
       return;
     }
 
-    const initialData: Record<string, any> = {};
+    const initialData: Record<string, FormValue> = {};
 
     if (!open) {
       formStructure.fields.filter(shouldShowField).forEach((field) => {
@@ -198,6 +227,16 @@ export default function OutputWindow({
 
     if (hasChanges) {
       setModalFormData(newData);
+      
+      //Used Condition for not trigger rerenders.. but not working...
+      // setModalFormData((prev) => {
+   // prevent unnecessary updates
+//    if (JSON.stringify(prev) === JSON.stringify(newData)) {
+//      return prev;
+//    }
+//    return newData;
+//  });
+
     }
   }, [formStructure, open, isInitialMount]);
 
@@ -252,7 +291,7 @@ export default function OutputWindow({
       const JsonTextData = JSON.parse(jsonText as string);
       let optionsFields: {value:string,label:string}[] = [];
 
-      JsonTextData.fields.forEach((field: FormField) => {
+      JsonTextData.fields.filter(shouldShowField).forEach((field: FormField) => {
         if (
           field.type === "select" &&
           field.id === modalFormData["dependsOn"]
@@ -335,13 +374,15 @@ export default function OutputWindow({
   // };
 
   // New function to validate individual field on change
-  const validateFieldOnChange = (fieldId: string, value: any) => {
+  // const validateFieldOnChange = (fieldId: string, value:any) => {
+  const validateFieldOnChange = (fieldId: string, value:FormValue) => {
     const field = formStructure?.fields
       .filter(shouldShowField)
       .find((f) => f.id === fieldId);
     if (!field) return;
 
-    const errorObj: Record<string, any> = { ...formErrors };
+    // const errorObj: Record<string, any> = { ...formErrors };
+    const errorObj: Record<string, string> = { ...formErrors };
 
     // Check if field is required
     if (field.required && !value) {
@@ -350,7 +391,7 @@ export default function OutputWindow({
     // Email validation
     else if (field.type === "email" && value) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(value)) {
+      if (!emailRegex.test(value as string)) {
         errorObj[fieldId] = `${field.label || fieldId} is not valid!!`;
       } else {
         delete errorObj[fieldId];
@@ -358,7 +399,7 @@ export default function OutputWindow({
     }
     // Number validation
     else if (field.type === "number" && value) {
-      if (isNaN(value)) {
+      if (isNaN(value as number)) {
         errorObj[fieldId] = `${field.label || fieldId} must be a number!!`;
       } else {
         delete errorObj[fieldId];
@@ -367,7 +408,7 @@ export default function OutputWindow({
     // Date validation
     else if (field.type === "date" && value) {
       const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-      if (!dateRegex.test(value)) {
+      if (!dateRegex.test(value as string)) {
         errorObj[fieldId] = `${field.label || fieldId} must be a valid date!!`;
       } else {
         delete errorObj[fieldId];
@@ -381,9 +422,16 @@ export default function OutputWindow({
     setFormErrors(errorObj);
   };
 
+  // const removeValuesFromFormData = (fieldId:string):boolean=>{
+  //   const fields = formStructure.fields.filter(shouldShowField);
+    
+  //   return !!field;
+  // };
+
   const handleInputChange = (
     fieldId: string,
-    value: any,
+    // value: any,
+    value: FormValue,
     parentId: string | undefined | null,
   ) => {
     if (!open) {
@@ -391,10 +439,20 @@ export default function OutputWindow({
         ...prev,
         [fieldId]: value,
       }));
+
+    //   setFormData((prev) => {
+    //     if(isIdInFormStructure(fieldId)){
+    //       return{...prev,[fieldId]:value}
+    //     }else{
+    //       delete prev[fieldId];
+    //       return prev;
+    //     }
+    // });
       // validateFieldOnChange(fieldId,value);
     } else {
       if (fieldId === "id") {
-        if (!checkIfIdisUnique(value)) {
+        // if (!checkIfIdisUnique(value)) {
+        if (!checkIfIdisUnique(value as string)) {
           setError("ID must be unique. This ID already exists.");
         } else {
           setError(null);
@@ -435,7 +493,8 @@ export default function OutputWindow({
   };
 
   const isValidForm = () => {
-    let errArr: Record<string, any> = {};
+    // let errArr: Record<string, any> = {};
+    let errArr: Record<string, string> = {};
     if (open) {
       errArr = validateByData(modalFormData);
     } else {
@@ -445,15 +504,18 @@ export default function OutputWindow({
     return Object.keys(errArr).length > 0;
   };
 
-  const validateByData = (data: Record<string, any>) => {
-    const errArr: Record<string, any> = {};
+  // const validateByData = (data: Record<string, any>) => {
+  const validateByData = (data: FormDataType) => {
+    // const errArr: Record<string, any> = {};
+    const errArr: Record<string,string> = {};
     formStructure.fields.filter(shouldShowField).forEach((f) => {
       if (f.required && !data[f.id]) {
         errArr[f.id] = `${f.id} is required!!`;
       }
       if (f.type === "email" && data[f.id]) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(data[f.id])) {
+        // if (!emailRegex.test(data[f.id])) {
+        if (!emailRegex.test(data[f.id] as string)) {
           errArr[f.id] = `${f.id} is not Valid!!`;
         }
       }
@@ -519,7 +581,7 @@ export default function OutputWindow({
     }
   };
 
-  const convertmodalDataToJSON = (data: any) => {
+  const convertmodalDataToJSON = (data: FormDataType) => {
     return {
       id: data.id || `field-${Date.now()}`,
       type: data.type || "text",
@@ -555,7 +617,7 @@ export default function OutputWindow({
             id: field.id,
             placeholder: field.placeholder || "",
             required: field.required || false,
-            value: formData[field.id] || "",
+            value: formData[field.id] as string || "",
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
             baseInputClasses,
@@ -567,8 +629,8 @@ export default function OutputWindow({
             placeholder: field.placeholder || "",
             required: field.required || false,
             value: parentId
-              ? modalFormData[parentId]?.[field.id] || ""
-              : modalFormData[field.id] || "",
+              ? ((modalFormData[parentId] as FormDataType)?.[field.id] as string) || ""
+              : modalFormData[field.id] as string || "",
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -586,7 +648,7 @@ export default function OutputWindow({
             id: field.id,
             placeholder: field.placeholder || "",
             required: field.required || false,
-            value: formData[field.id] || "",
+            value: formData[field.id] as string || "",
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -599,8 +661,8 @@ export default function OutputWindow({
             placeholder: field.placeholder || "",
             required: field.required || false,
             value: parentId
-              ? modalFormData[parentId]?.[field.id] || ""
-              : modalFormData[field.id] || "",
+              ? ((modalFormData[parentId] as FormDataType)?.[field.id]) as string || ""
+              : modalFormData[field.id] as string || "",
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -619,7 +681,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            value: formData[field.id] || "",
+            value: formData[field.id] as string || "",
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -631,7 +693,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            value: modalFormData[field.id] || "",
+            value: modalFormData[field.id] as string || "",
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLSelectElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -649,7 +711,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            checked: formData[field.id] || false,
+            checked: formData[field.id] as boolean || false,
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.checked, parentId),
@@ -660,7 +722,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            checked: modalFormData[field.id] || false,
+            checked: modalFormData[field.id] as boolean || false,
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.checked, parentId),
@@ -677,7 +739,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            checked: formData[field.id],
+            checked: formData[field.id] as string,
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -689,7 +751,7 @@ export default function OutputWindow({
             type: field.type,
             id: field.id,
             required: field.required || false,
-            checked: modalFormData[field.id],
+            checked: modalFormData[field.id] as string,
             // onChange:handleInputChange,
             onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
               handleInputChange(field.id, e.target.value, parentId),
@@ -924,9 +986,9 @@ export default function OutputWindow({
             {open &&
               field.id === "dependsOnValue" &&
               modalFormData["dependsOnValue"] &&
-              modalFormData["dependsOnValue"].length > 0 && (
+              (modalFormData["dependsOnValue"]as string[]).length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">
-                  {modalFormData["dependsOnValue"].map(
+                  {(modalFormData["dependsOnValue"]as string[]).map(
                     (val: string, index: number) => (
                       <span
                         key={index}
@@ -937,9 +999,9 @@ export default function OutputWindow({
                           className="inline"
                           onClick={() => {
                             setModalFormData((prev) => {
-                              const updatedValues = prev[
+                              const updatedValues = (prev[
                                 "dependsOnValue"
-                              ].filter((v: string) => v !== val);
+                              ] as string[]).filter((v: string) => v !== val);
                               return { ...prev, dependsOnValue: updatedValues };
                             });
                           }}

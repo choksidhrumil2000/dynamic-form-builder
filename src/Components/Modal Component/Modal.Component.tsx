@@ -1,6 +1,11 @@
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
-import type { ModalProps } from '../../types/ModalProps'
 import { X } from 'lucide-react'
+
+export interface ModalProps {
+    open:boolean;
+    setOpen:(open:boolean)=>void;
+    children:React.ReactNode
+}
 
 export default function Modal({open,setOpen,children}:ModalProps) {
 //   const [open, setOpen] = useState(true)

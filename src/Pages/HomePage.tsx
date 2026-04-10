@@ -1,7 +1,6 @@
 import { useState } from "react";
-import type { FormStructure } from "../types/FormStructure";
 import EditorWindow from "../Components/EditorComponent/EditorWindow.component";
-import OutputWindow from "../Components/OutputWindow/OutputWindow.Component";
+import OutputWindow, { type FormStructure } from "../Components/OutputWindow/OutputWindow.Component";
 import { Form } from "lucide-react";
 import Modal from "../Components/Modal Component/Modal.Component";
 
