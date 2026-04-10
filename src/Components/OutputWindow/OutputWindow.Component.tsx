@@ -203,16 +203,17 @@ const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Handle form structure changes when in editor mode
   useEffect(() => {
-    if (!open || !formStructure?.fields) return;
+    // if (!open || !formStructure?.fields) return;
 
-    // Don't reset if it's the initial mount
+    if(open){
+// Don't reset if it's the initial mount
     if (isInitialMount) return;
 
     // Only add new fields that don't exist in modalFormData
     const newData = { ...modalFormData };
     let hasChanges = false;
 
-    formStructure.fields.filter(shouldShowField).forEach((field) => {
+    formStructure?.fields.filter(shouldShowField).forEach((field) => {
       if (newData[field.id] === undefined) {
         hasChanges = true;
         if (field.type === "checkbox") {
@@ -227,6 +228,8 @@ const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
     if (hasChanges) {
       setModalFormData(newData);
+    }
+    
       
       //Used Condition for not trigger rerenders.. but not working...
       // setModalFormData((prev) => {
@@ -434,20 +437,13 @@ const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     value: FormValue,
     parentId: string | undefined | null,
   ) => {
+    setSubmitted(false)
     if (!open) {
       setFormData((prev) => ({
         ...prev,
         [fieldId]: value,
       }));
 
-    //   setFormData((prev) => {
-    //     if(isIdInFormStructure(fieldId)){
-    //       return{...prev,[fieldId]:value}
-    //     }else{
-    //       delete prev[fieldId];
-    //       return prev;
-    //     }
-    // });
       // validateFieldOnChange(fieldId,value);
     } else {
       if (fieldId === "id") {
@@ -534,6 +530,18 @@ const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     if (!open) {
       setSubmitted(true);
       // console.log('Form Data:', formData);
+      const tempObj:FormDataType = JSON.parse(JSON.stringify(formData));
+      formStructure.fields.filter(shouldShowField).forEach((f)=>{
+        if(tempObj[f.id]){
+          delete tempObj[f.id];
+        }
+      })
+      const tempObjIdKeys:string[] = Object.keys(tempObj);
+      tempObjIdKeys.forEach((key)=>{
+        delete formData[key];
+      })
+      console.log(formData);
+      setFormData((prev)=>({...prev,...formData}));
       localStorage.setItem("FormData", JSON.stringify(formData));
       alert("Form submitted! Check console for data.");
     } else {
