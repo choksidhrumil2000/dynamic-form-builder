@@ -217,14 +217,14 @@ export default function OutputWindow({
 
     if (open) {
       setSubmitted(false);
-      const JsonTextData = JSON.parse(jsonText);
-      const selectFields: any[] = [];
-      const optionsFields: any[] = [];
+      const JsonTextData = JSON.parse(jsonText as string);
+      const selectFields: FormField[] = [];
+      const optionsFields: {value:string,label:string}[] = [];
       JsonTextData.fields.forEach((field: FormField) => {
         if (field.type === "select") {
           selectFields.push(field);
 
-          optionsFields.push(...field.options);
+          optionsFields.push(...field.options as {value:string,label:string}[]);
         }
       });
 
@@ -243,21 +243,21 @@ export default function OutputWindow({
           f.dependsOnValue = optionsFields.map((f) => f.value);
         }
       });
-      onChange((prev) => ({ ...prev, ...tempStructure }));
+      onChange?.((prev) => ({ ...prev, ...tempStructure }));
     }
   }, []);
 
   useEffect(() => {
     if (open && modalFormData["dependsOn"]) {
-      const JsonTextData = JSON.parse(jsonText);
-      let optionsFields: any[] = [];
+      const JsonTextData = JSON.parse(jsonText as string);
+      let optionsFields: {value:string,label:string}[] = [];
 
       JsonTextData.fields.forEach((field: FormField) => {
         if (
           field.type === "select" &&
           field.id === modalFormData["dependsOn"]
         ) {
-          optionsFields = [...field.options];
+          optionsFields = [...field.options as {value:string,label:string}[]];
         }
       });
 
@@ -269,7 +269,7 @@ export default function OutputWindow({
           f.options = [...optionsFields];
         }
       });
-      onChange((prev) => ({ ...prev, ...tempStructure }));
+      onChange?.((prev) => ({ ...prev, ...tempStructure }));
     }
   }, [modalFormData["dependsOn"]]);
 
@@ -429,7 +429,7 @@ export default function OutputWindow({
   };
 
   const checkIfIdisUnique = (id: string): boolean => {
-    const tempJsonTextData = JSON.parse(jsonText);
+    const tempJsonTextData = JSON.parse(jsonText as string);
     const field = tempJsonTextData.fields.find((f: FormField) => f.id === id);
     return !field;
   };
@@ -500,10 +500,10 @@ export default function OutputWindow({
       setModalFormData((prev) => ({ ...prev, options }));
 
       const tempData = convertmodalDataToJSON(tempModalFormData);
-      const tempJSONTextData = JSON.parse(jsonText);
+      const tempJSONTextData = JSON.parse(jsonText as string);
       if (tempData.dependsOn) {
         const idx = tempJSONTextData.fields.findIndex(
-          (f) => f.id === tempData.dependsOn,
+          (f:FormField) => f.id === tempData.dependsOn,
         );
         if (idx !== 1) {
           tempJSONTextData.fields.splice(idx + 1, 0, tempData);
@@ -513,9 +513,9 @@ export default function OutputWindow({
       } else {
         tempJSONTextData.fields.push(tempData);
       }
-      setJsonText(JSON.stringify(tempJSONTextData, null, 2));
-      onChange((prev) => ({ ...prev, ...modalFormJson }));
-      setOpen(false);
+      setJsonText?.(JSON.stringify(tempJSONTextData, null, 2));
+      onChange?.((prev) => ({ ...prev, ...modalFormJson }));
+      setOpen?.(false);
     }
   };
 
@@ -720,16 +720,17 @@ export default function OutputWindow({
   };
 
   const handleAddOptionsForSelectOrRadio = () => {
-    onChange((prev: FormStructure) => {
+    onChange?.((prev) => {
       if (!prev) return prev;
-      const temp: FormStructure = { ...prev };
-      const buttonObj = temp.fields.find(
+      const temp: FormStructure = { ...prev as FormStructure };
+      const buttonObj:FormField = temp.fields.find(
         (f: FormField) => f.id === "add-options",
-      );
+      ) as FormField;
       temp.fields = temp.fields.filter(
         (f: FormField) => f.id !== "add-options",
       );
-      let idx = temp.fields.findIndex((f) => f.id === "options");
+      const idx:number = temp.fields.findIndex((f) => f.id === "options");
+      console.log(idx);
       const num: number = Math.random();
       temp.fields.push(
         {
@@ -771,8 +772,8 @@ export default function OutputWindow({
     setFormErrors({});
   };
 
-  const handleAddField = (field?: any) => {
-    setOpen(true);
+  const handleAddField = () => {
+    setOpen?.(true);
   };
 
   const handleRemoveField = (
@@ -781,9 +782,9 @@ export default function OutputWindow({
   ) => {
     // formStructure.fields = formStructure.fields.filter(f => f.id !== field.id);
     if (tag === "for-options") {
-      onChange((prev) => {
+      onChange?.((prev) => {
         if (!prev) return prev;
-        const updatedStructure = { ...prev };
+        const  updatedStructure:FormStructure = { ...prev as FormStructure };
         updatedStructure.fields = updatedStructure.fields.filter(
           (f: FormField) => f.id !== field.id,
         );
@@ -797,9 +798,9 @@ export default function OutputWindow({
       });
       return;
     }
-    onChange((prev) => {
+    onChange?.((prev) => {
       if (!prev) return prev;
-      const updatedStructure: FormStructure = { ...prev };
+      const updatedStructure: FormStructure = { ...prev as FormStructure };
       if (field.dependsOn) {
         updatedStructure.fields = updatedStructure.fields.filter(
           (f: FormField) => f.id !== field.id,
@@ -811,9 +812,9 @@ export default function OutputWindow({
       }
       return updatedStructure;
     });
-    setJsonText((prev) => {
+    setJsonText?.((prev) => {
       try {
-        const parsed = JSON.parse(prev);
+        const parsed = JSON.parse(prev as string);
         if (field.dependsOn) {
           parsed.fields = parsed.fields.filter(
             (f: FormField) => f.id !== field.id,
@@ -865,7 +866,7 @@ export default function OutputWindow({
         ) : null}
       </div>
       <form onSubmit={handleSubmit} className="space-y-2" noValidate>
-        {formStructure.fields.filter(shouldShowField).map((field: any) => (
+        {formStructure.fields.filter(shouldShowField).map((field: FormField) => (
           <div
             key={field.id}
             className={`transition-all duration-300 ${

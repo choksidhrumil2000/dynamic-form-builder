@@ -1,5 +1,3 @@
-import type { Dispatch, SetStateAction } from "react";
-
 export interface JsonEditorProps {
   // onChange?: (jsonData: any) => void;
   // onChange?: Dispatch<SetStateAction<string|null>>

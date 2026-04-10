@@ -294,7 +294,8 @@ export default function EditorWindow({
     // Find 1-based line where "key"\s*: appears, searching forward from afterLine
     const findKeyLine = (key: string, afterLine = 0): number => {
       for (let i = afterLine; i < lines.length; i++) {
-        if (new RegExp(`"${CSS.escape ? key : key}"\\s*:`).test(lines[i]))
+        // if (new RegExp(`"${CSS.escape ? key : key}"\\s*:`).test(lines[i]))
+        if (new RegExp(`"${key}"\\s*:`).test(lines[i]))
           return i + 1;
       }
       return afterLine + 1;
@@ -339,10 +340,13 @@ export default function EditorWindow({
     // const getActualValue = (parsed: any, instancePath: string): any => {
     const getActualValue = (parsed: unknown, instancePath: string): unknown => {  
     const parts = instancePath.split("/").filter(Boolean);
-      let cur = parsed;
+      let cur:any = parsed;
+      // let tmp:string = '';
       for (const part of parts) {
         if (cur == null) return undefined;
         cur = cur[part];
+        // tmp = cur[part];
+        // return tmp;
       }
       return cur;
     };
@@ -443,14 +447,15 @@ export default function EditorWindow({
             message,
             severity:
               err.keyword === "additionalProperties"
-                ? monacoRef.current.MarkerSeverity.Error
-                : monacoRef.current.MarkerSeverity.Warning,
+                ? monacoRef.current!.MarkerSeverity.Error
+                : monacoRef.current!.MarkerSeverity.Warning,
           });
         });
       } else {
         setErrors([]);
       }
-    } catch (err: unknown) {
+    } catch (error:unknown) {
+      const err = error as Error;
       setIsValidJson(false);
       setErrors([{ message: "Invalid JSON: " + err.message  } as ErrorObject]);
 
@@ -489,6 +494,7 @@ export default function EditorWindow({
   }, []);
 
   useEffect(() => {
+    // if(!editorReady && !jsonText) return;
     if (editorReady && jsonText) {
       localStorage.setItem("JsonText", jsonText);
       validateJSON(jsonText);

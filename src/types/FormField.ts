@@ -4,7 +4,8 @@ export interface FormField {
   label: string;
   placeholder?: string;
   required?: boolean;
-  options?: Array<{ value: string; label: string }>;
+  options?: { value: string; label: string }[] | undefined;
+  fields?:FormField[];
   validation?: any;
   dependsOn?: string;
   dependsOnValue?: string | string[];
