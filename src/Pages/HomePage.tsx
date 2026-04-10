@@ -263,6 +263,7 @@ export default function HomePage() {
     useState<FormStructure | null>(JSON.parse(ModalFormJson));
   const [baseModalFormStructure, setBaseModalFormStructure] =
     useState<FormStructure | null>(JSON.parse(ModalFormJson));
+    console.log(setBaseModalFormStructure);
 
   return (
     <div className="min-h-screen bg-gradient-to-br m-0 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
