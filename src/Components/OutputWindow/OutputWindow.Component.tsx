@@ -514,7 +514,7 @@ export default function OutputWindow({
         tempJSONTextData.fields.push(tempData);
       }
       setJsonText?.(JSON.stringify(tempJSONTextData, null, 2));
-      onChange?.((prev) => ({ ...prev, ...modalFormJson }));
+      onChange?.((prev) => ({ ...prev as FormStructure, ...modalFormJson }));
       setOpen?.(false);
     }
   };
